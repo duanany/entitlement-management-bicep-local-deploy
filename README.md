@@ -169,27 +169,71 @@ See [Sample Documentation](./Sample/README.md) for all deployment examples.
 
 **Want to validate ALL samples automatically with idempotency checks?**
 
-This repository includes a comprehensive AI-assisted testing prompt that can:
+This repository includes **two ways** to run comprehensive AI-assisted testing:
 
+### Option 1: Custom Chatmode (Recommended) 🎯
+
+**Best for**: Interactive testing sessions with GitHub Copilot
+
+```bash
+# Step 1: Switch to "Testing Automation Agent" chatmode
+# (Available in GitHub Copilot's chatmode selector)
+
+# Step 2: Simply ask:
+"Test all samples"
+
+# Step 3: Review the generated report
+cat TESTING_RESULTS.md
+```
+
+**Chatmode location**: `.github/chatmodes/testing-agent.chatmode.md`
+
+**Benefits**:
+- ✅ Pre-configured testing personality and protocols
+- ✅ Automatic reference to instructions file
+- ✅ Knows expected baselines and red flags
+- ✅ Professional output formatting
+- ✅ Interactive guidance (ask questions, get clarifications)
+
+### Option 2: Standalone Prompt (Universal) 📋
+
+**Best for**: Any AI assistant (Claude, ChatGPT, etc.)
+
+```bash
+# Step 1: Copy the testing prompt
+# Located in: .github/instructions/testing-automation.instructions.md
+
+# Step 2: Paste into your AI assistant and ask:
+"Test all samples in this repository using this protocol"
+
+# Step 3: Review the generated report
+cat TESTING_RESULTS.md
+```
+
+**Prompt location**: `.github/instructions/testing-automation.instructions.md`
+
+**Benefits**:
+- ✅ Works with ANY AI assistant (not just Copilot)
+- ✅ Copy-paste ready (no setup required)
+- ✅ Complete protocol in one file
+- ✅ Portable across different AI platforms
+
+### What Both Methods Test
+
+| Sample | Resources | Validations |
+|--------|-----------|-------------|
+| 01-catalog-basic | 3 | Catalog + Package + Policy |
+| 02-catalog-with-groups | 6 | Groups → Catalog → Package → Role → Policy |
+| 03-catalog-pim-jit-access | 8 | Full PIM workflow (eligible → activated) |
+| 04-catalog-approval-workflows | 9 | 4 approval patterns |
+
+**Testing features** (both methods):
 - ✅ **Build all samples** (validate compilation)
 - ✅ **Deploy each sample 3 times** (idempotency validation)
 - ✅ **Compare resource IDs** across deployments (detect non-idempotent resources)
 - ✅ **Generate testing reports** (TESTING_RESULTS.md with evidence)
 - ✅ **Automate token acquisition** (no manual copy-paste)
 - ✅ **Performance profiling** (track deployment times)
-
-### Quick Test Run
-
-```bash
-# Step 1: Share the testing prompt with your AI assistant
-# Located in: .github/prompts/testing-automation.md
-
-# Step 2: Ask your AI to run the test
-"Test all samples in this repository using the testing automation prompt"
-
-# Step 3: Review the generated report
-cat TESTING_RESULTS.md
-```
 
 ### What Gets Tested
 
@@ -233,22 +277,26 @@ Before the fix, running `bicep local-deploy` three times produced:
 
 After the fix, all 3 deployments return the same ID! ✅
 
-### AI Testing Prompt
+### Testing Protocol Files
 
-**Full prompt**: [.github/prompts/testing-automation.md](./.github/prompts/testing-automation.md)
+**Chatmode**: `.github/chatmodes/testing-agent.chatmode.md`
+- Interactive testing agent personality
+- Pre-configured protocols and baselines
+- Automatic instructions reference
+- Best for GitHub Copilot users
 
-This prompt contains:
-- Step-by-step protocol (discovery → build → token → deploy 3x → compare → report)
+**Instructions**: `.github/instructions/testing-automation.instructions.md`
+- Complete step-by-step testing protocol
+- Token acquisition automation
 - Expected baseline results (timing benchmarks)
-- Error handling strategies (common issues + solutions)
-- Quality checklist (production readiness assessment)
-- Example testing session (copy-paste ready commands)
+- Error handling strategies and debugging commands
+- TESTING_RESULTS.md template
+- Quality checklist and success criteria
+- Best for any AI assistant (universal)
 
-**Compatible with**:
-- GitHub Copilot Agent Mode (recommended)
-- Claude Sonnet 4.5
-- ChatGPT with Code Interpreter
-- Any AI assistant with terminal access
+**Example Results**: `TESTING_RESULTS.md`
+- See how the testing protocol caught the policy idempotency bug
+- Professional report format (executive summary → detailed results → issues → conclusion)
 
 ### Manual Testing (Without AI)
 
