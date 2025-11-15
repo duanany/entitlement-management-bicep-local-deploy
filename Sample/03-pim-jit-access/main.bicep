@@ -131,8 +131,13 @@ resource pimAccessPolicy 'accessPackageAssignmentPolicy' = {
 // ==========================================
 
 resource pimEligibility 'groupPimEligibility' = {
-  eligibleGroupUniqueName: pimEligibleGroup.uniqueName
-  activatedGroupUniqueName: pimActivatedGroup.uniqueName
+  // Option 1: Reference by uniqueName (original approach)
+  // eligibleGroupUniqueName: pimEligibleGroup.uniqueName
+  // activatedGroupUniqueName: pimActivatedGroup.uniqueName
+
+  // Option 2: Reference by ID (supports cross-deployment scenarios)
+  eligibleGroupId: pimEligibleGroup.id
+  activatedGroupId: pimActivatedGroup.id
 
   accessId: 'member'
   justification: 'JIT developer access - eligible members can activate for 2 hours'

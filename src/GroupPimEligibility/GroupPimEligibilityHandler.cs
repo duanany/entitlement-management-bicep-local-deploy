@@ -35,25 +35,27 @@ public class GroupPimEligibilityHandler : GroupUserResourceHandlerBase<GroupPimE
     {
         var props = request.Properties;
 
-        Console.WriteLine($"PREVIEW: GroupPimEligibility eligible={props.EligibleGroupUniqueName}, activated={props.ActivatedGroupUniqueName}");
+        Console.WriteLine($"PREVIEW: GroupPimEligibility");
 
-        // Retrieve eligible group
-        var eligibleGroup = await GetGroupByUniqueNameAsync(request.Config, props.EligibleGroupUniqueName, cancellationToken);
-        if (eligibleGroup is null)
-        {
-            throw new Exception($"ELIGIBLE group not found: '{props.EligibleGroupUniqueName}'. Create this group first using 'securityGroup' resource.");
-        }
+        // Resolve eligible group (either by uniqueName or id)
+        var eligibleGroupId = await ResolveGroupIdAsync(
+            request.Config,
+            props.EligibleGroupUniqueName,
+            props.EligibleGroupId,
+            "ELIGIBLE",
+            cancellationToken);
 
-        props.EligibleGroupId = eligibleGroup.id;
+        props.EligibleGroupId = eligibleGroupId;
 
-        // Retrieve activated group
-        var activatedGroup = await GetGroupByUniqueNameAsync(request.Config, props.ActivatedGroupUniqueName, cancellationToken);
-        if (activatedGroup is null)
-        {
-            throw new Exception($"ACTIVATED group not found: '{props.ActivatedGroupUniqueName}'. Create this group first using 'securityGroup' resource.");
-        }
+        // Resolve activated group (either by uniqueName or id)
+        var activatedGroupId = await ResolveGroupIdAsync(
+            request.Config,
+            props.ActivatedGroupUniqueName,
+            props.ActivatedGroupId,
+            "ACTIVATED",
+            cancellationToken);
 
-        props.ActivatedGroupId = activatedGroup.id;
+        props.ActivatedGroupId = activatedGroupId;
 
         Console.WriteLine($"PREVIEW: Eligible={props.EligibleGroupId}, Activated={props.ActivatedGroupId}");
 
@@ -64,33 +66,35 @@ public class GroupPimEligibilityHandler : GroupUserResourceHandlerBase<GroupPimE
     {
         var props = request.Properties;
 
-        Console.WriteLine($"CREATE/UPDATE: GroupPimEligibility eligible={props.EligibleGroupUniqueName}, activated={props.ActivatedGroupUniqueName}");
+        Console.WriteLine($"CREATE/UPDATE: GroupPimEligibility");
 
-        // Step 1: Retrieve ELIGIBLE group (must exist!)
-        var eligibleGroup = await GetGroupByUniqueNameAsync(request.Config, props.EligibleGroupUniqueName, cancellationToken);
-        if (eligibleGroup is null)
-        {
-            throw new Exception($"ELIGIBLE group not found: '{props.EligibleGroupUniqueName}'. Create this group first using 'securityGroup' resource before configuring PIM.");
-        }
+        // Step 1: Resolve ELIGIBLE group (either by uniqueName or id)
+        var eligibleGroupId = await ResolveGroupIdAsync(
+            request.Config,
+            props.EligibleGroupUniqueName,
+            props.EligibleGroupId,
+            "ELIGIBLE",
+            cancellationToken);
 
-        props.EligibleGroupId = eligibleGroup.id;
+        props.EligibleGroupId = eligibleGroupId;
         Console.WriteLine($"Found ELIGIBLE group: {props.EligibleGroupId}");
 
-        // Step 2: Retrieve ACTIVATED group (must exist!)
-        var activatedGroup = await GetGroupByUniqueNameAsync(request.Config, props.ActivatedGroupUniqueName, cancellationToken);
-        if (activatedGroup is null)
-        {
-            throw new Exception($"ACTIVATED group not found: '{props.ActivatedGroupUniqueName}'. Create this group first using 'securityGroup' resource before configuring PIM.");
-        }
+        // Step 2: Resolve ACTIVATED group (either by uniqueName or id)
+        var activatedGroupId = await ResolveGroupIdAsync(
+            request.Config,
+            props.ActivatedGroupUniqueName,
+            props.ActivatedGroupId,
+            "ACTIVATED",
+            cancellationToken);
 
-        props.ActivatedGroupId = activatedGroup.id;
+        props.ActivatedGroupId = activatedGroupId;
         Console.WriteLine($"Found ACTIVATED group: {props.ActivatedGroupId}");
 
         // Step 3: Check if PIM eligibility already exists
         var existingEligibility = await GetExistingPimEligibilityAsync(
             request.Config,
-            eligibleGroup.id!,
-            activatedGroup.id!,
+            eligibleGroupId,
+            activatedGroupId,
             cancellationToken);
 
         if (existingEligibility is not null)
@@ -102,13 +106,13 @@ public class GroupPimEligibilityHandler : GroupUserResourceHandlerBase<GroupPimE
             // Apply policy if provided (group already PIM-onboarded)
             if (!string.IsNullOrWhiteSpace(props.PolicyTemplateJson))
             {
-                var approverGroupId = props.ApproverGroupId ?? eligibleGroup.id!;
+                var approverGroupId = props.ApproverGroupId ?? eligibleGroupId;
                 Console.WriteLine($"Applying role management policy (group already PIM-enabled)...");
                 Console.WriteLine($"Approvers: {(props.ApproverGroupId == null ? "ELIGIBLE group members (self-approval)" : "Custom approver group")}");
 
                 await ApplyFullRoleManagementPolicyAsync(
                     request.Config,
-                    activatedGroup.id!,
+                    activatedGroupId,
                     props.PolicyTemplateJson,
                     approverGroupId,
                     props.MaxActivationDuration,
@@ -118,11 +122,11 @@ public class GroupPimEligibilityHandler : GroupUserResourceHandlerBase<GroupPimE
         else
         {
             // Step 4: Create PIM eligibility schedule request with retries
-            Console.WriteLine($"Creating PIM eligibility: {props.EligibleGroupUniqueName} → {props.ActivatedGroupUniqueName}");
+            Console.WriteLine($"Creating PIM eligibility: Eligible={eligibleGroupId} → Activated={activatedGroupId}");
             var pimResult = await CreatePimEligibilityWithRetriesAsync(
                 request.Config,
-                eligibleGroup.id!,
-                activatedGroup.id!,
+                eligibleGroupId,
+                activatedGroupId,
                 props.AccessId,
                 props.Justification ?? "PIM eligibility configured via Bicep local-deploy",
                 props.ExpirationDateTime,
@@ -138,13 +142,13 @@ public class GroupPimEligibilityHandler : GroupUserResourceHandlerBase<GroupPimE
             // Step 6: Apply role management policy AFTER onboarding (if provided)
             if (!string.IsNullOrWhiteSpace(props.PolicyTemplateJson))
             {
-                var approverGroupId = props.ApproverGroupId ?? eligibleGroup.id!;
+                var approverGroupId = props.ApproverGroupId ?? eligibleGroupId;
                 Console.WriteLine($"Applying role management policy with approval workflows (AFTER onboarding)...");
                 Console.WriteLine($"Approvers: {(props.ApproverGroupId == null ? "ELIGIBLE group members (self-approval)" : "Custom approver group")}");
 
                 await ApplyFullRoleManagementPolicyAsync(
                     request.Config,
-                    activatedGroup.id!,
+                    activatedGroupId,
                     props.PolicyTemplateJson,
                     approverGroupId,
                     props.MaxActivationDuration,
@@ -159,12 +163,49 @@ public class GroupPimEligibilityHandler : GroupUserResourceHandlerBase<GroupPimE
 
     protected override GroupPimEligibilityIdentifiers GetIdentifiers(GroupPimEligibility properties) => new()
     {
-        EligibleGroupUniqueName = properties.EligibleGroupUniqueName
+        EligibleGroupUniqueName = properties.EligibleGroupUniqueName,
+        EligibleGroupId = properties.EligibleGroupId
     };
 
     // ========================================
     // HELPER METHODS
     // ========================================
+
+    /// <summary>
+    /// Resolve group ID from either uniqueName or direct ID.
+    /// Supports both workflows: reference by name OR reference by ID.
+    /// </summary>
+    private async Task<string> ResolveGroupIdAsync(
+        Configuration config,
+        string? uniqueName,
+        string? groupId,
+        string groupType,
+        CancellationToken cancellationToken)
+    {
+        // Validate: at least one must be provided
+        if (string.IsNullOrWhiteSpace(uniqueName) && string.IsNullOrWhiteSpace(groupId))
+        {
+            throw new Exception($"{groupType} group requires either uniqueName or ID. Both are missing.");
+        }
+
+        // If ID provided directly, use it
+        if (!string.IsNullOrWhiteSpace(groupId))
+        {
+            Console.WriteLine($"{groupType} group ID provided directly: {groupId}");
+            return groupId;
+        }
+
+        // Otherwise, lookup by uniqueName
+        Console.WriteLine($"Resolving {groupType} group by uniqueName: {uniqueName}");
+        var group = await GetGroupByUniqueNameAsync(config, uniqueName!, cancellationToken);
+        if (group is null)
+        {
+            throw new Exception($"{groupType} group not found: '{uniqueName}'. Create this group first using 'securityGroup' resource.");
+        }
+
+        Console.WriteLine($"{groupType} group resolved: {group.id}");
+        return group.id!;
+    }
 
     /// <summary>
     /// Retrieve group by uniqueName (mailNickname) from Graph API.

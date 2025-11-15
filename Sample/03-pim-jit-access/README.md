@@ -74,6 +74,76 @@ The official **Microsoft Graph Bicep extension** provides:
 - **Compliance**: Enforce time-limited access with justification and approval
 - **Zero standing privilege**: No permanent memberships, only JIT activation
 
+## Group Reference Options
+
+The `groupPimEligibility` resource supports **two ways** to reference groups:
+
+### Option 1: Reference by uniqueName (convenient for all-in-one deployments)
+
+```bicep
+resource pimEligibility 'groupPimEligibility' = {
+  eligibleGroupUniqueName: pimEligibleGroup.uniqueName
+  activatedGroupUniqueName: pimActivatedGroup.uniqueName
+  accessId: 'member'
+  expirationDateTime: '2026-05-15T00:00:00Z'
+  policyTemplateJson: loadTextContent('../pim-policy-template.json')
+  maxActivationDuration: 'PT2H'
+}
+```
+
+**Best for**: When creating groups AND PIM eligibility in the same template.
+
+### Option 2: Reference by ID (enables cross-deployment scenarios)
+
+```bicep
+resource pimEligibility 'groupPimEligibility' = {
+  eligibleGroupId: pimEligibleGroup.id
+  activatedGroupId: pimActivatedGroup.id
+  accessId: 'member'
+  expirationDateTime: '2026-05-15T00:00:00Z'
+  policyTemplateJson: loadTextContent('../pim-policy-template.json')
+  maxActivationDuration: 'PT2H'
+}
+```
+
+**Best for**:
+- Referencing groups created in **separate deployments**
+- Using groups from **standard Bicep** (microsoft.graph/groups@1.0)
+- Referencing **existing Entra ID groups** (pass GUID as parameter)
+
+**Example**: Cross-deployment scenario
+
+```bicep
+// File 1: groups.bicep (standard Bicep - deploy with 'az deployment group create')
+targetScope = 'resourceGroup'
+
+extension microsoftGraph
+
+resource eligibleGroup 'Microsoft.Graph/groups@1.0' = {
+  displayName: 'PIM Eligible Developers'
+  mailEnabled: false
+  securityEnabled: true
+  uniqueName: 'pim-eligible-developers'
+}
+
+output groupId string = eligibleGroup.id
+
+// File 2: pim-eligibility.bicep (local-deploy - deploy with 'bicep local-deploy')
+targetScope = 'local'
+
+extension entitlementmgmt
+
+param eligibleGroupId string  // From output of groups.bicep
+
+resource pimEligibility 'groupPimEligibility' = {
+  eligibleGroupId: eligibleGroupId  // ← Direct ID reference!
+  activatedGroupId: '...'  // Reference activated group ID
+  // ... rest of config
+}
+```
+
+**Both options work identically** - use whichever fits your deployment strategy!
+
 ## Prerequisites
 
 - Microsoft Graph API tokens:

@@ -4,12 +4,15 @@ using Azure.Bicep.Types.Concrete;
 
 /// <summary>
 /// Identifiers for Group PIM Eligibility resource.
-/// Uses uniqueName of eligible group for idempotency.
+/// Uses either uniqueName or ID of eligible group for idempotency.
 /// </summary>
 public class GroupPimEligibilityIdentifiers
 {
-    [TypeProperty("Unique name (mailNickname) of the ELIGIBLE group. This group's ID will be used as the principal in the PIM eligibility.", ObjectTypePropertyFlags.Identifier | ObjectTypePropertyFlags.Required)]
-    public required string EligibleGroupUniqueName { get; set; }
+    [TypeProperty("Unique name (mailNickname) of the ELIGIBLE group. Either this or eligibleGroupId must be provided.", ObjectTypePropertyFlags.Identifier)]
+    public string? EligibleGroupUniqueName { get; set; }
+
+    [TypeProperty("Entra ID Object ID of the ELIGIBLE group. Either this or eligibleGroupUniqueName must be provided.", ObjectTypePropertyFlags.Identifier)]
+    public string? EligibleGroupId { get; set; }
 }
 
 /// <summary>
@@ -36,8 +39,11 @@ public class GroupPimEligibilityIdentifiers
 [ResourceType("groupPimEligibility")]
 public class GroupPimEligibility : GroupPimEligibilityIdentifiers
 {
-    [TypeProperty("Unique name (mailNickname) of the ACTIVATED group. This is the target group where users get TEMPORARY membership via PIM.")]
-    public required string ActivatedGroupUniqueName { get; set; }
+    [TypeProperty("Unique name (mailNickname) of the ACTIVATED group. Either this or activatedGroupId must be provided.")]
+    public string? ActivatedGroupUniqueName { get; set; }
+
+    [TypeProperty("Entra ID Object ID of the ACTIVATED group. Either this or activatedGroupUniqueName must be provided.")]
+    public string? ActivatedGroupId { get; set; }
 
     [TypeProperty("Access type for PIM eligibility. Valid values: 'member' (default) or 'owner'.")]
     public string AccessId { get; set; } = "member";
@@ -56,13 +62,6 @@ public class GroupPimEligibility : GroupPimEligibilityIdentifiers
 
     [TypeProperty("Maximum activation duration (ISO 8601 duration). Default: PT2H (2 hours). Used to replace {maxActivationDuration} placeholder in policy template.")]
     public string? MaxActivationDuration { get; set; }
-
-    // Read-only outputs (8 properties total = simple resource!)
-    [TypeProperty("Entra ID Object ID of the eligible group (resolved from uniqueName)", ObjectTypePropertyFlags.ReadOnly)]
-    public string? EligibleGroupId { get; set; }
-
-    [TypeProperty("Entra ID Object ID of the activated group (resolved from uniqueName)", ObjectTypePropertyFlags.ReadOnly)]
-    public string? ActivatedGroupId { get; set; }
 
     [TypeProperty("PIM eligibility schedule request ID", ObjectTypePropertyFlags.ReadOnly)]
     public string? PimEligibilityRequestId { get; set; }
