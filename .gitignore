@@ -1,0 +1,31 @@
+# Build artifacts
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+# Extension outputs
+Sample/entitlementmgmt-ext/
+
+# Bicep outputs (regenerated from source)
+*.json
+!bicepconfig.json
+!pim-policy-template.json
+!pim-policy-contractor-strict.json
+!users.json
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.temp
+*~
