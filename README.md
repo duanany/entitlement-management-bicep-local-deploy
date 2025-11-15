@@ -17,6 +17,23 @@ I'm not a C#/.NET expert—I'm a platform engineer who loves experimenting with 
 
 If you're curious how this magic happened, dive into the chatmode files. They're the real MVPs here! 🚀
 
+### Why I Built This
+
+I've implemented Azure Entitlement Management deployments **numerous times** using different approaches:
+
+1. **Pure JSON + PowerShell**: Describing catalogs and access packages in JSON files, then deploying via PowerShell scripts calling Graph API
+2. **Bicep Framework + PowerShell Hybrid**: Using Bicep to describe groups and entitlement catalogs, outputting metadata, then consuming it in PowerShell tasks for deployment
+
+**Both approaches had the same problem**: **No true Infrastructure-as-Code!**
+
+You couldn't:
+- ✅ See the desired state in a single declarative file
+- ✅ Run `bicep local-deploy` and have everything created idempotently
+- ✅ Track entitlement management state alongside Azure resources
+- ✅ Use native Bicep syntax with IntelliSense for entitlement resources
+
+**This extension solves that.** Now entitlement management is **first-class IaC**, just like ARM templates, but with the simplicity of Bicep and the power of local-deploy.
+
 ## 🎯 Current Capabilities
 
 - ✅ **Access Package Catalogs** - Organize and manage access packages
@@ -52,10 +69,18 @@ resource pimEligibility 'groupPimEligibility' = {
 
 **Microsoft Graph Bicep** (`az/microsoft-graph@1.0`) already provides `microsoft.graph/groups` resource!
 
+**This extension's `securityGroup` and `groupPimEligibility` resources deploy groups with the `uniqueName` property** (just like Bicep Graph groups). This means:
+
+✅ **Groups are reusable outside Bicep local-deploy!**
+- Groups created with `uniqueName: 'my-unique-group'` can be referenced from standard Bicep files
+- Other deployments can query these groups via `uniqueName`
+- No need to duplicate group definitions across deployment types
+
 **This extension's `securityGroup` resource is for**:
 - ✅ All-in-one testing (groups + entitlement management in one deployment)
 - ✅ Sample/demo scenarios
 - ✅ Learning the full workflow
+- ✅ Creating groups that will be used in both local-deploy and standard Bicep
 
 **For production**:
 - Use [Microsoft Graph Bicep](https://github.com/microsoftgraph/msgraph-bicep-types) for security groups
