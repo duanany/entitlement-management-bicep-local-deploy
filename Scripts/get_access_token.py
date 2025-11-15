@@ -68,9 +68,7 @@ def get_token():
         print("\n   Bash/Zsh:")
         print(f'   export GRAPH_TOKEN="{token}"')
 
-        print("\n🚀 Deploy your catalog:")
-        print("   cd /Users/bregr00/Documents/bicep-local-deploy/entitlement-management/Sample")
-        print("   bicep local-deploy ./main.bicepparam")
+        print("\n🚀 Deploy your catalog!!")
 
         return token
     else:

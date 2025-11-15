@@ -1,6 +1,6 @@
 using './main.bicep'
 
-// Get tokens: python3 /Users/bregr00/Documents/PSScripts/get_token.py
+// Get tokens: python3 Scripts/get_access_token.py
 param entitlementToken = readEnvironmentVariable('ENTITLEMENT_TOKEN', '')
 param groupUserToken = readEnvironmentVariable('GROUP_USER_TOKEN', '')
 

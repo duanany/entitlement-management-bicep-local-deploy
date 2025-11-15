@@ -55,7 +55,7 @@ Complete workflow: create a security group and manage its membership via access 
 
 ```bash
 # Run the token script
-python3 /Users/bregr00/Documents/PSScripts/get_token.py
+python3 Scripts/get_access_token.py
 ```
 
 ## Edit Parameters

@@ -16,7 +16,7 @@ Successfully implemented **`groupPimEligibility`** - a simplified PIM resource t
 
 ### New Resource: `groupPimEligibility`
 
-**Location**: `/Users/bregr00/Documents/bicep-local-deploy/entitlement-management/src/GroupPimEligibility/`
+**Location**: `src/GroupPimEligibility`
 
 **Property Count**: 11 (well under threshold)
 
@@ -147,7 +147,7 @@ $ bicep build main-new-pattern.bicep
 # SUCCESS - No errors
 
 $ ls -lh main-new-pattern.json
--rw-r--r--  1 bregr00  staff    24K Nov  8 20:06 main-new-pattern.json
+-rw-r--r--  1 <user>  staff    24K Nov  8 20:06 main-new-pattern.json
 ```
 
 ## Migration Path

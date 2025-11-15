@@ -17,7 +17,7 @@ The simplest entitlement management deployment: a catalog, access package, and p
 
 ```bash
 # Run the token script (stores token in ENTITLEMENT_TOKEN env var)
-python3 /Users/bregr00/Documents/PSScripts/get_token.py
+python3 Scripts/get_access_token.py
 ```
 
 ## Deploy
