@@ -22,7 +22,7 @@ If you're curious how this magic happened, dive into the chatmode files. They're
 I've implemented Azure Entitlement Management deployments **numerous times** using different approaches:
 
 1. **Pure JSON + PowerShell**: Describing catalogs and access packages in JSON files, then deploying via PowerShell scripts calling Graph API
-2. **Bicep Framework + PowerShell Hybrid**: Using Bicep to describe groups and entitlement catalogs, outputting metadata, then consuming it in PowerShell tasks for deployment
+2. **Bicep Framework + PowerShell Hybrid**: Using Bicep to describe and deploy groups and entitlement catalogs, outputting desired state, then consuming it in PowerShell tasks for deployment
 
 **Both approaches had the same problem**: **No true Infrastructure-as-Code!**
 
