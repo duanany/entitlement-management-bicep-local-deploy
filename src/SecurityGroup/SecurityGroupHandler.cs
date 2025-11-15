@@ -413,7 +413,7 @@ public class SecurityGroupHandler : GroupUserResourceHandlerBase<SecurityGroup, 
             PropertyNameCaseInsensitive = false
         });
 
-        var currentMemberIds = result?.value?.Select(m => m.id).Where(id => !string.IsNullOrEmpty(id)).ToHashSet() ?? new HashSet<string>();
+        var currentMemberIds = result?.value?.Select(m => m.id).Where(id => !string.IsNullOrEmpty(id)).Cast<string>().ToHashSet() ?? new HashSet<string>();
 
         Console.WriteLine($"Current members: {currentMemberIds.Count}");
         Console.WriteLine($"Desired members: {desiredMemberIds.Length}");
@@ -422,7 +422,7 @@ public class SecurityGroupHandler : GroupUserResourceHandlerBase<SecurityGroup, 
         var membersToRemove = currentMemberIds.Except(desiredMemberIds).ToList();
 
         // Find members to add (in desired but not in current)
-        var membersToAdd = desiredMemberIds.Except(currentMemberIds).ToArray();
+        var membersToAdd = desiredMemberIds.Except(currentMemberIds).Where(id => !string.IsNullOrEmpty(id)).ToArray();
 
         // Remove extra members
         foreach (var memberId in membersToRemove)
