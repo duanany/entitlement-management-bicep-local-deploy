@@ -6,10 +6,10 @@ Production-ready Bicep templates demonstrating Azure Entitlement Management patt
 
 ```
 Sample/
-├── 01-basic-catalog/           # Minimal deployment (catalog + access package)
-├── 02-catalog-with-groups/     # Security group → catalog → access package workflow
-├── 03-catalog-pim-jit-access/  # PIM Just-In-Time activation (UNIQUE VALUE! ⭐)
-├── 04-approval-workflows/      # 4 approval patterns: manager, user, group, multi-stage
+├── 01-catalog-basic/               # Minimal deployment (catalog + access package)
+├── 02-catalog-with-groups/         # Security group → catalog → access package workflow
+├── 03-catalog-pim-jit-access/      # PIM Just-In-Time activation (UNIQUE VALUE! ⭐)
+├── 04-catalog-approval-workflows/  # 4 approval patterns: manager, user, group, multi-stage
 ├── entitlementmgmt-ext/        # Published extension binaries (auto-generated)
 ├── pim-policy-template.json    # PIM activation policy template
 └── README.md                   # This file
@@ -40,16 +40,16 @@ python3 entitlement-management/Scripts/get_access_token.py
 
 | Sample | What It Does | Tokens Needed | Deploy Time |
 |--------|-------------|---------------|-------------|
-| **01-basic-catalog** | Minimal setup: catalog + package + policy | Entitlement only | ~3s |
+| **01-catalog-basic** | Minimal setup: catalog + package + policy | Entitlement only | ~3s |
 | **02-catalog-with-groups** | Create group + add to access package | Both tokens | ~30s |
 | **03-catalog-pim-jit-access** ⭐ | PIM eligibility + JIT activation | Both tokens | ~60s |
-| **04-approval-workflows** | 4 approval patterns (manager, user, group, 2-stage) | Entitlement only | ~8s |
+| **04-catalog-approval-workflows** | 4 approval patterns (manager, user, group, 2-stage) | Entitlement only | ~8s |
 
 ### 4. Deploy
 
 ```bash
 # Navigate to sample folder
-cd 01-basic-catalog
+cd 01-catalog-basic
 
 # Edit parameters (optional)
 code main.bicepparam
@@ -60,19 +60,20 @@ bicep local-deploy main.bicepparam
 
 ## 📖 Sample Details
 
-### 01-basic-catalog
+### 01-catalog-basic
 
-**Simplest deployment** - understand the core entitlement management concepts.
+**Minimal deployment** - catalog + access package + policy.
 
 **What you'll learn**:
-- How catalogs organize access packages
-- How policies define who can request access
-- Basic deployment workflow
+- Create access package catalog
+- Define access package
+- Configure assignment policy
+- Deploy with single token
 
 **Resources created**: 3
 **Deploy time**: ~3 seconds
 
-[View README](./01-basic-catalog/README.md)
+[View README](./01-catalog-basic/README.md)
 
 ---
 
@@ -111,7 +112,7 @@ Uses `securityGroup` resource (⚠️ for testing only - use Microsoft Graph Bic
 
 ---
 
-### 04-approval-workflows
+### 04-catalog-approval-workflows
 
 **4 approval patterns** - manager, specific user, group peer, two-stage.
 
@@ -125,7 +126,7 @@ Uses `securityGroup` resource (⚠️ for testing only - use Microsoft Graph Bic
 **Resources created**: 9
 **Deploy time**: ~8 seconds
 
-[View README](./04-approval-workflows/README.md)
+[View README](./04-catalog-approval-workflows/README.md)
 
 ## 🔧 Prerequisites
 
@@ -161,11 +162,11 @@ Your service principal or user account needs:
 **Beginner** → **Intermediate** → **Advanced**
 
 ```
-01-basic-catalog
+01-catalog-basic
 ↓
 02-catalog-with-groups
 ↓
-04-approval-workflows
+04-catalog-approval-workflows
 ↓
 03-catalog-pim-jit-access ⭐
 ```## 📚 Additional Resources

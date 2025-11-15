@@ -159,7 +159,7 @@ extension entitlementmgmt with {
 ### 4. Deploy a Sample
 
 ```bash
-cd Sample/01-basic-catalog
+cd Sample/01-catalog-basic
 bicep local-deploy main.bicepparam
 ```
 
@@ -330,10 +330,10 @@ entitlement-management/
 │   ├── GroupPimEligibility/            # PIM eligibility handler ⭐
 │   └── Configuration.cs                # Shared token config
 ├── Sample/
-│   ├── 01-basic-catalog/               # Minimal deployment
+│   ├── 01-catalog-basic/               # Minimal deployment
 │   ├── 02-catalog-with-groups/         # Group membership workflow
 │   ├── 03-catalog-pim-jit-access/      # PIM eligibility (unique!) ⭐
-│   └── 04-approval-workflows/          # Approval patterns
+│   └── 04-catalog-approval-workflows/  # Approval patterns
 ├── docs/                               # Resource documentation
 ├── Scripts/
 │   └── Publish-Extension.ps1           # Multi-platform build script
@@ -395,6 +395,31 @@ Contributions welcome:
 - New resource types
 - Documentation improvements
 - Sample templates
+
+### Sample Folder Naming Convention
+
+All sample folders under `Sample/` **must** follow this naming pattern:
+
+```
+<two-digits>-catalog-<descriptive-name>
+```
+
+**Examples**:
+- ✅ `01-catalog-basic` - Minimal deployment
+- ✅ `02-catalog-with-groups` - Catalog with security groups
+- ✅ `03-catalog-pim-jit-access` - Catalog with PIM eligibility
+- ✅ `04-catalog-approval-workflows` - Catalog with approval patterns
+
+**Why this convention?**:
+- **Consistent sorting**: Two-digit prefix ensures proper ordering (01, 02, ..., 10, 11)
+- **Clear scope**: `catalog` prefix immediately identifies entitlement management samples
+- **Descriptive**: Remaining name describes the specific scenario
+
+**When adding new samples**:
+1. Use next available two-digit number (05, 06, etc.)
+2. Always include `-catalog-` after the number
+3. Use descriptive kebab-case name (lowercase, hyphens)
+4. Update all README.md files referencing sample folders
 
 ## 📄 License
 

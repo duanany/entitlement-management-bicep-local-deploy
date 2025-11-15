@@ -102,7 +102,7 @@ bicep local-deploy main.bicepparam
 ## Next Steps
 
 - **PIM JIT access**: See `03-catalog-pim-jit-access/` for time-limited group membership
-- **Approval workflows**: See `04-approval-workflows/` for manager/peer approval before granting access
+- **Approval workflows**: See `04-catalog-approval-workflows/` for manager/peer approval before granting access
 
 ## Clean Up
 

@@ -38,7 +38,7 @@ bicep local-deploy main.bicepparam
 ## Next Steps
 
 - **Add resources**: See `02-security-groups/` to add groups to your access package
-- **Approval workflows**: See `04-approval-workflows/` for manager/peer approval
+- **Approval workflows**: See `04-catalog-approval-workflows/` for manager/peer approval
 - **PIM JIT access**: See `03-pim-jit-access/` for time-limited activation
 
 ## Clean Up

@@ -319,7 +319,7 @@ See `../pim-policy-template.json` for the full policy.
 
 ## Next Steps
 
-- **Approval workflows**: See `04-approval-workflows/` for different approval patterns
+- **Approval workflows**: See `04-catalog-approval-workflows/` for different approval patterns
 - **Production**: Use activated group in Azure RBAC, Entra ID roles, or application permissions
 
 ## Clean Up
