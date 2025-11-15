@@ -50,7 +50,7 @@ resource pimEligibility 'groupPimEligibility' = {
 
 ### Security Group Resource (⚠️ For Testing Only)
 
-**Microsoft Graph Bicep** (`az/microsoft-graph@1.0.0`) already provides `microsoft.graph/groups` resource!
+**Microsoft Graph Bicep** (`az/microsoft-graph@1.0`) already provides `microsoft.graph/groups` resource!
 
 **This extension's `securityGroup` resource is for**:
 - ✅ All-in-one testing (groups + entitlement management in one deployment)
@@ -80,9 +80,7 @@ Add to `bicepconfig.json`:
 ```json
 {
   "experimentalFeaturesEnabled": {
-    "extensibility": true,
-    "localDeploy": true,
-    "publishSource": true
+    "localDeploy": true
   }
 }
 ```
@@ -106,6 +104,34 @@ python3 /path/to/get_token.py
 # - ENTITLEMENT_TOKEN
 # - GROUP_USER_TOKEN
 ```
+
+#### Why Two Tokens?
+
+**Least privilege principle in action!**
+
+In many organizations, users don't have blanket permissions across all Graph API scopes. You might have:
+- ✅ `EntitlementManagement.ReadWrite.All` but NOT `Group.ReadWrite.All`
+- ✅ `Group.ReadWrite.All` but NOT `PrivilegedAccess.ReadWrite.AzureADGroup`
+
+**This extension splits token requirements** so you can use different credentials based on what you're deploying:
+
+```bicep
+extension entitlementmgmt with {
+  entitlementToken: entitlementToken  // For catalogs, packages, policies, assignments
+  groupUserToken: groupUserToken      // For security groups, PIM, user operations
+}
+```
+
+**If you have all permissions in one token**: Just use the same token for both parameters!
+
+```bicep
+extension entitlementmgmt with {
+  entitlementToken: myFullAccessToken
+  groupUserToken: myFullAccessToken  // Same token = no problem!
+}
+```
+
+**Future roadmap**: I'm considering adding a third token (`pimScheduledRequestToken`) for PIM eligibility schedule requests to further separate privileges. Not implemented yet, but the architecture supports it! 🚀
 
 ### 4. Deploy a Sample
 
