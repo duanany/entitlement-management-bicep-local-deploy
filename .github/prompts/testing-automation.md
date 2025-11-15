@@ -23,7 +23,7 @@ You are an expert testing automation agent responsible for validating all Bicep 
 ## Prerequisites
 
 - Repository: `entitlement-management-bicep-local-deploy`
-- Python script: `/Users/bregr00/Documents/PSScripts/get_token.py` (or equivalent token acquisition method)
+- Python script: `Scripts/get_access_token.py` (or equivalent token acquisition method)
 - Bicep CLI: Installed with local-deploy support
 - Extension: Already published to `./Sample/entitlementmgmt-ext`
 
@@ -77,7 +77,7 @@ For each sample directory:
 
 ```bash
 # Get fresh token with all required permissions
-python3 /Users/bregr00/Documents/PSScripts/get_token.py
+python3 Scripts/get_access_token.py
 
 # Token is automatically copied to clipboard
 # Export to environment variables for Bicep deployment
@@ -486,7 +486,7 @@ Before marking testing complete, verify:
 
 ```bash
 # Step 1: Get token
-python3 /Users/bregr00/Documents/PSScripts/get_token.py
+python3 Scripts/get_access_token.py
 export GRAPH_TOKEN=$(pbpaste)
 export ENTITLEMENT_TOKEN=$GRAPH_TOKEN
 export GROUP_USER_TOKEN=$GRAPH_TOKEN
