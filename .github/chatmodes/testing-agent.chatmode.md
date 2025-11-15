@@ -1,5 +1,5 @@
 ---
-name: Testing Automation Agent
+name: Testing_Automation_Agent
 description: Automated testing agent for Bicep local-deploy samples with idempotency validation
 version: 1.0
 applyTo: '**'
