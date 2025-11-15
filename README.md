@@ -165,6 +165,119 @@ bicep local-deploy main.bicepparam
 
 See [Sample Documentation](./Sample/README.md) for all deployment examples.
 
+## 🧪 Testing Automation with AI
+
+**Want to validate ALL samples automatically with idempotency checks?**
+
+This repository includes a comprehensive AI-assisted testing prompt that can:
+
+- ✅ **Build all samples** (validate compilation)
+- ✅ **Deploy each sample 3 times** (idempotency validation)
+- ✅ **Compare resource IDs** across deployments (detect non-idempotent resources)
+- ✅ **Generate testing reports** (TESTING_RESULTS.md with evidence)
+- ✅ **Automate token acquisition** (no manual copy-paste)
+- ✅ **Performance profiling** (track deployment times)
+
+### Quick Test Run
+
+```bash
+# Step 1: Share the testing prompt with your AI assistant
+# Located in: .github/prompts/testing-automation.md
+
+# Step 2: Ask your AI to run the test
+"Test all samples in this repository using the testing automation prompt"
+
+# Step 3: Review the generated report
+cat TESTING_RESULTS.md
+```
+
+### What Gets Tested
+
+| Sample | Resources | Validations |
+|--------|-----------|-------------|
+| 01-catalog-basic | 3 | Catalog + Package + Policy |
+| 02-catalog-with-groups | 6 | Groups → Catalog → Package → Role → Policy |
+| 03-catalog-pim-jit-access | 8 | Full PIM workflow (eligible → activated) |
+| 04-catalog-approval-workflows | 9 | 4 approval patterns (manager, user, group, multi-stage) |
+
+**Each sample is deployed 3 times** to validate:
+- ✅ First deploy: Creates all resources
+- ✅ Second deploy: Reuses existing resources (IDs unchanged)
+- ✅ Third deploy: Confirms consistent behavior
+
+### Why This Matters
+
+**Idempotency is CRITICAL for IaC!** If resource IDs change on re-deployment, your handler is **creating duplicates** instead of updating existing resources. This testing protocol catches those bugs automatically.
+
+**Example: Policy Idempotency Bug (Now Fixed)**
+
+Before the fix, running `bicep local-deploy` three times produced:
+- Deploy #1: `policyId: 1f9bbc02-6a69-49a7-a292-74245b9b8b06`
+- Deploy #2: `policyId: b04d8cab-7171-4d65-a9ec-19c6515590da` ❌ DIFFERENT ID!
+- Deploy #3: `policyId: 48c8fa6a-cf82-4cba-821e-ecf68aafc066` ❌ DIFFERENT ID!
+
+**The AI testing agent detected this automatically** and flagged it in TESTING_RESULTS.md as:
+
+```markdown
+### Issue #1: Policy Idempotency - NOT IDEMPOTENT ❌
+
+**Evidence**:
+- Deploy #1 ID: 1f9bbc02-6a69-49a7-a292-74245b9b8b06
+- Deploy #2 ID: b04d8cab-7171-4d65-a9ec-19c6515590da
+- Deploy #3 ID: 48c8fa6a-cf82-4cba-821e-ecf68aafc066
+
+**Root Cause**: Graph API query missing $expand=accessPackage parameter
+
+**Recommendation**: Fix handler to query existing policies correctly
+```
+
+After the fix, all 3 deployments return the same ID! ✅
+
+### AI Testing Prompt
+
+**Full prompt**: [.github/prompts/testing-automation.md](./.github/prompts/testing-automation.md)
+
+This prompt contains:
+- Step-by-step protocol (discovery → build → token → deploy 3x → compare → report)
+- Expected baseline results (timing benchmarks)
+- Error handling strategies (common issues + solutions)
+- Quality checklist (production readiness assessment)
+- Example testing session (copy-paste ready commands)
+
+**Compatible with**:
+- GitHub Copilot Agent Mode (recommended)
+- Claude Sonnet 4.5
+- ChatGPT with Code Interpreter
+- Any AI assistant with terminal access
+
+### Manual Testing (Without AI)
+
+If you prefer manual testing:
+
+```bash
+# Deploy a sample 3 times
+cd Sample/01-catalog-basic
+
+# Deploy #1
+bicep local-deploy main.bicepparam | tee deploy1.log
+
+# Deploy #2
+sleep 10
+bicep local-deploy main.bicepparam | tee deploy2.log
+
+# Deploy #3
+sleep 10
+bicep local-deploy main.bicepparam | tee deploy3.log
+
+# Compare output IDs
+grep "catalogId" deploy*.log
+# All 3 should show the SAME ID!
+```
+
+**Pro tip**: Use the AI prompt even for manual testing—it includes all the commands, expected results, and comparison logic! 🚀
+
+---
+
 ## 📖 Bicep Usage Example
 
 ### Basic Catalog + Access Package
