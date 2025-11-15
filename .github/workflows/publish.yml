@@ -1,0 +1,65 @@
+name: Publish Extension
+
+on:
+  push:
+    branches: [main]
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  publish-extension:
+    name: Publish Entitlement Management Extension
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0 # avoid shallow clone so nbgv can do its work.
+
+      - uses: actions/setup-dotnet@v4
+        with:
+            dotnet-version: '9.0.x'
+
+      - name: Install Bicep
+        run: |
+          curl -Lo bicep https://github.com/Azure/bicep/releases/latest/download/bicep-linux-x64
+          chmod +x ./bicep
+          sudo mv ./bicep /usr/local/bin/bicep
+          bicep --version
+
+      - name: Run nbgv
+        id: nbgv
+        uses: dotnet/nbgv@v0.4.2
+
+      - name: Build and Publish Extension
+        shell: pwsh
+        run: |
+          Write-Host "Building entitlement management extension version ${{ steps.nbgv.outputs.SimpleVersion }}..."
+          
+          # Build for all platforms
+          dotnet publish src/entitlement-management.csproj --configuration Release -r osx-arm64
+          dotnet publish src/entitlement-management.csproj --configuration Release -r linux-x64
+          dotnet publish src/entitlement-management.csproj --configuration Release -r win-x64
+          
+          # Publish extension locally for validation
+          ./Scripts/Publish-Extension.ps1 -Target "./entitlementmgmt-ext"
+          
+          Write-Host "✅ Extension published successfully" >> $GITHUB_STEP_SUMMARY
+          Write-Host "Version: ${{ steps.nbgv.outputs.SimpleVersion }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload Extension Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: entitlementmgmt-extension-${{ steps.nbgv.outputs.SimpleVersion }}
+          path: ./entitlementmgmt-ext
+          retention-days: 30
+
+      - name: Create Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v1
+        with:
+          files: ./entitlementmgmt-ext
+          generate_release_notes: true
+          draft: false
+          prerelease: false
