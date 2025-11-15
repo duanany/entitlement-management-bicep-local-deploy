@@ -31,7 +31,7 @@ jobs:
 
       - name: Build
         run: |
-          dotnet build
+          dotnet build src/EntitlementManagement.csproj --configuration Release
 
   publish-local:
     name: Publish Extension Locally

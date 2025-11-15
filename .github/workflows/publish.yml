@@ -36,15 +36,15 @@ jobs:
         shell: pwsh
         run: |
           Write-Host "Building entitlement management extension version ${{ steps.nbgv.outputs.SimpleVersion }}..."
-          
+
           # Build for all platforms
           dotnet publish src/entitlement-management.csproj --configuration Release -r osx-arm64
           dotnet publish src/entitlement-management.csproj --configuration Release -r linux-x64
           dotnet publish src/entitlement-management.csproj --configuration Release -r win-x64
-          
+
           # Publish extension locally for validation
           ./Scripts/Publish-Extension.ps1 -Target "./entitlementmgmt-ext"
-          
+
           Write-Host "✅ Extension published successfully" >> $GITHUB_STEP_SUMMARY
           Write-Host "Version: ${{ steps.nbgv.outputs.SimpleVersion }}" >> $GITHUB_STEP_SUMMARY
 
