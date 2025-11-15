@@ -2,8 +2,6 @@
 
 A custom Bicep Local Extension for managing **Azure Entitlement Management** and **Privileged Identity Management (PIM)** resources via Infrastructure-as-Code.
 
-![Bicep to Entitlement Management](docs/assets/bicep-to-entitlement.png)
-
 > [!NOTE]
 > This is an experimental Bicep feature and is subject to change. Do not use it in production.
 
