@@ -6,9 +6,9 @@ Production-ready Bicep templates demonstrating Azure Entitlement Management patt
 
 ```
 Sample/
-├── 01-basic-catalog/          # Simplest deployment: catalog + access package + policy
-├── 02-security-groups/         # Security group → catalog → access package workflow
-├── 03-pim-jit-access/          # PIM Just-In-Time activation (UNIQUE VALUE! ⭐)
+├── 01-basic-catalog/           # Minimal deployment (catalog + access package)
+├── 02-catalog-with-groups/     # Security group → catalog → access package workflow
+├── 03-catalog-pim-jit-access/  # PIM Just-In-Time activation (UNIQUE VALUE! ⭐)
 ├── 04-approval-workflows/      # 4 approval patterns: manager, user, group, multi-stage
 ├── entitlementmgmt-ext/        # Published extension binaries (auto-generated)
 ├── pim-policy-template.json    # PIM activation policy template
@@ -41,8 +41,8 @@ python3 entitlement-management/Scripts/get_access_token.py
 | Sample | What It Does | Tokens Needed | Deploy Time |
 |--------|-------------|---------------|-------------|
 | **01-basic-catalog** | Minimal setup: catalog + package + policy | Entitlement only | ~3s |
-| **02-security-groups** | Create group + add to access package | Both tokens | ~30s |
-| **03-pim-jit-access** ⭐ | PIM eligibility + JIT activation | Both tokens | ~60s |
+| **02-catalog-with-groups** | Create group + add to access package | Both tokens | ~30s |
+| **03-catalog-pim-jit-access** ⭐ | PIM eligibility + JIT activation | Both tokens | ~60s |
 | **04-approval-workflows** | 4 approval patterns (manager, user, group, 2-stage) | Entitlement only | ~8s |
 
 ### 4. Deploy
@@ -76,24 +76,24 @@ bicep local-deploy main.bicepparam
 
 ---
 
-### 02-security-groups
+### 02-catalog-with-groups
 
-**Complete workflow** - create a security group and manage membership via access packages.
+**Security Group → Catalog → Access Package**
 
-**What you'll learn**:
-- Adding groups as catalog resources
-- Resource roles (Member role assignment)
-- Linking groups to access packages
-- Why this extension vs. Microsoft Graph Bicep
+Demonstrates the full workflow:
 
-**Resources created**: 6
-**Deploy time**: ~30 seconds
+1. Create security group with members
+2. Add group to catalog as resource
+3. Create access package granting group membership
+4. Users request access → Get assigned to security group
 
-[View README](./02-security-groups/README.md)
+Uses `securityGroup` resource (⚠️ for testing only - use Microsoft Graph Bicep for production).
+
+[View README](./02-catalog-with-groups/README.md)
 
 ---
 
-### 03-pim-jit-access ⭐
+### 03-catalog-pim-jit-access ⭐
 
 **UNIQUE VALUE!** Microsoft Graph Bicep does **NOT** have `groupPimEligibility` resource.
 
@@ -107,7 +107,7 @@ bicep local-deploy main.bicepparam
 **Resources created**: 8
 **Deploy time**: ~60 seconds (pimEligibility takes ~46s)
 
-[View README](./03-pim-jit-access/README.md)
+[View README](./03-catalog-pim-jit-access/README.md)
 
 ---
 
@@ -162,15 +162,13 @@ Your service principal or user account needs:
 
 ```
 01-basic-catalog
-    ↓
-02-security-groups
-    ↓
+↓
+02-catalog-with-groups
+↓
 04-approval-workflows
-    ↓
-03-pim-jit-access ⭐
-```
-
-## 📚 Additional Resources
+↓
+03-catalog-pim-jit-access ⭐
+```## 📚 Additional Resources
 
 - **Full Documentation**: See `../docs/` for detailed resource reference
 - **Handler Source Code**: See `../src/` for implementation details

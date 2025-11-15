@@ -331,8 +331,8 @@ entitlement-management/
 │   └── Configuration.cs                # Shared token config
 ├── Sample/
 │   ├── 01-basic-catalog/               # Minimal deployment
-│   ├── 02-security-groups/             # Group membership workflow
-│   ├── 03-pim-jit-access/              # PIM eligibility (unique!) ⭐
+│   ├── 02-catalog-with-groups/         # Group membership workflow
+│   ├── 03-catalog-pim-jit-access/      # PIM eligibility (unique!) ⭐
 │   └── 04-approval-workflows/          # Approval patterns
 ├── docs/                               # Resource documentation
 ├── Scripts/
