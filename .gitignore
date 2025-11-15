@@ -29,3 +29,6 @@ Thumbs.db
 *.tmp
 *.temp
 *~
+
+# Ignore the entire Sample/entitlementmgmt-ext directory
+Sample/entitlementmgmt-ext
