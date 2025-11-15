@@ -239,8 +239,14 @@ resource activatedGroup 'securityGroup' = {
 
 // Configure PIM eligibility
 resource pimEligibility 'groupPimEligibility' = {
-  eligibleGroupUniqueName: eligibleGroup.uniqueName
-  activatedGroupUniqueName: activatedGroup.uniqueName
+  // Option 1: Reference by ID (supports cross-deployment scenarios) (original approach)
+  eligibleGroupId: eligibleGroup.id
+  activatedGroupId: activatedGroup.id
+
+  // Option 2: Reference by uniqueName
+  // eligibleGroupUniqueName: eligibleGroup.uniqueName
+  // activatedGroupUniqueName: activatedGroup.uniqueName
+
   accessId: 'member'
   maxActivationDuration: 'PT2H'  // 2 hours
   expirationDateTime: '2026-12-31T23:59:59Z'
