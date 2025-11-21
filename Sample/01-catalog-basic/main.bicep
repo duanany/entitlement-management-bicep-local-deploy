@@ -9,8 +9,6 @@ param entitlementToken string
 // ==========================================
 
 module catalog '../../avm/res/graph/identity-governance/entitlement-management/catalogs/main.bicep' = {
-
-  name: 'catalogDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Bicep Local - Basic Catalog'
@@ -26,18 +24,13 @@ module catalog '../../avm/res/graph/identity-governance/entitlement-management/c
 // ==========================================
 
 module accessPackage '../../avm/res/graph/identity-governance/entitlement-management/access-package/main.bicep' = {
-
-  name: 'accessPackageDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Bicep Local - Basic Access Package'
-    catalogName: 'Bicep Local - Basic Catalog'
+    catalogName: catalog.name
     accessPackageDescription: 'Simple access package in basic catalog'
     isHidden: false
   }
-  dependsOn: [
-    catalog
-  ]
 }
 
 // ==========================================
@@ -45,13 +38,11 @@ module accessPackage '../../avm/res/graph/identity-governance/entitlement-manage
 // ==========================================
 
 module assignmentPolicy '../../avm/res/graph/identity-governance/entitlement-management/assignment-policies/main.bicep' = {
-
-  name: 'assignmentPolicyDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Policy: All Users Can Request'
-    accessPackageName: 'Bicep Local - Basic Access Package'
-    catalogName: 'Bicep Local - Basic Catalog'
+    accessPackageName: accessPackage.name
+    catalogName: catalog.name
     policyDescription: 'Any member user can request access - no approval required'
     allowedTargetScope: 'AllMemberUsers'
     requestorSettings: {
@@ -67,9 +58,6 @@ module assignmentPolicy '../../avm/res/graph/identity-governance/entitlement-man
     durationInDays: 365
     canExtend: true
   }
-  dependsOn: [
-    accessPackage
-  ]
 }
 
 // ==========================================

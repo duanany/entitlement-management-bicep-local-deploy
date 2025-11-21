@@ -35,8 +35,6 @@ resource demoSecurityGroup 'securityGroup' = {
 // ==========================================
 
 module catalog '../../avm/res/graph/identity-governance/entitlement-management/catalogs/main.bicep' = {
-
-  name: 'catalogDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Bicep Local - Security Group Catalog'
@@ -60,12 +58,10 @@ module catalog '../../avm/res/graph/identity-governance/entitlement-management/c
 // ==========================================
 
 module securityGroupAccessPackage '../../avm/res/graph/identity-governance/entitlement-management/access-package/main.bicep' = {
-
-  name: 'accessPackageDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Bicep Local - Security Group Membership'
-    catalogName: 'Bicep Local - Security Group Catalog'
+    catalogName: catalog.name
     accessPackageDescription: 'Grants membership to "${demoSecurityGroup.displayName}" security group'
     isHidden: false
     resourceRoleScopes: [
@@ -77,19 +73,14 @@ module securityGroupAccessPackage '../../avm/res/graph/identity-governance/entit
       }
     ]
   }
-  dependsOn: [
-    catalog
-  ]
 }
 
 module securityGroupAccessPolicy '../../avm/res/graph/identity-governance/entitlement-management/assignment-policies/main.bicep' = {
-
-  name: 'assignmentPolicyDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Policy: All Users Can Request Group Membership'
-    accessPackageName: 'Bicep Local - Security Group Membership'
-    catalogName: 'Bicep Local - Security Group Catalog'
+    accessPackageName: securityGroupAccessPackage.name
+    catalogName: catalog.name
     policyDescription: 'Any member user can request membership to "${demoSecurityGroup.displayName}"'
     allowedTargetScope: 'AllMemberUsers'
     requestorSettings: {
@@ -105,9 +96,6 @@ module securityGroupAccessPolicy '../../avm/res/graph/identity-governance/entitl
     durationInDays: 180
     canExtend: true
   }
-  dependsOn: [
-    securityGroupAccessPackage
-  ]
 }
 
 // ==========================================

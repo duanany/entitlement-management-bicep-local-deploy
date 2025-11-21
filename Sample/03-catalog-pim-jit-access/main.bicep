@@ -74,7 +74,6 @@ resource pimActivatedGroup 'securityGroup' = {
   uniqueName: 'bicep-pim-activated-developers'
   displayName: 'Bicep Local - PIM Activated Developers'
   description: 'Temporary membership granted via PIM activation - has RBAC on Azure resources'
-
   members: [] // PIM controls membership - leave empty
 }
 
@@ -83,8 +82,6 @@ resource pimActivatedGroup 'securityGroup' = {
 // ==========================================
 
 module pimCatalog '../../avm/res/graph/identity-governance/entitlement-management/catalogs/main.bicep' = {
-
-  name: 'catalogDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Bicep Local - PIM JIT Access Catalog'
@@ -110,12 +107,10 @@ module pimCatalog '../../avm/res/graph/identity-governance/entitlement-managemen
 // Once users have eligible membership, they can activate PIM to join the ACTIVATED group
 
 module pimAccessPackage '../../avm/res/graph/identity-governance/entitlement-management/access-package/main.bicep' = {
-
-  name: 'accessPackageDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Bicep Local - PIM JIT Developer Activation'
-    catalogName: 'Bicep Local - PIM JIT Access Catalog'
+    catalogName: pimCatalog.name
     accessPackageDescription: 'Grants eligible group membership - enables PIM activation for Azure resource access'
     isHidden: false
     resourceRoleScopes: [
@@ -127,9 +122,6 @@ module pimAccessPackage '../../avm/res/graph/identity-governance/entitlement-man
       }
     ]
   }
-  dependsOn: [
-    pimCatalog
-  ]
 }
 
 // ==========================================
@@ -138,13 +130,11 @@ module pimAccessPackage '../../avm/res/graph/identity-governance/entitlement-man
 // Requestors request access → Approvers approve → User gets eligible group membership
 
 module pimAccessPolicy '../../avm/res/graph/identity-governance/entitlement-management/assignment-policies/main.bicep' = {
-
-  name: 'assignmentPolicyDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Policy: Requestor Access with Approver Workflow'
-    accessPackageName: 'Bicep Local - PIM JIT Developer Activation'
-    catalogName: 'Bicep Local - PIM JIT Access Catalog'
+    accessPackageName: pimAccessPackage.name
+    catalogName: pimCatalog.name
     policyDescription: 'Requestors request access, approvers approve, eligible membership granted'
     allowedTargetScope: 'SpecificDirectoryUsers'
     requestorSettings: {
@@ -181,9 +171,6 @@ module pimAccessPolicy '../../avm/res/graph/identity-governance/entitlement-mana
     durationInDays: 180
     canExtend: true
   }
-  dependsOn: [
-    pimAccessPackage
-  ]
 }
 
 // ==========================================

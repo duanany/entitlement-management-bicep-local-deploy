@@ -15,8 +15,6 @@ param testGroupId string = '0afd1da6-51fb-450f-bf1a-069a85dcacad'
 // ==========================================
 
 module catalog '../../avm/res/graph/identity-governance/entitlement-management/catalogs/main.bicep' = {
-
-  name: 'catalogDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Bicep Local - Approval Workflows Catalog'
@@ -32,12 +30,10 @@ module catalog '../../avm/res/graph/identity-governance/entitlement-management/c
 // ==========================================
 
 module managerApprovalPackage '../../avm/res/graph/identity-governance/entitlement-management/access-package/main.bicep' = {
-
-  name: 'managerApprovalPackageDeployment'
-  params: {
+    params: {
     entitlementToken: entitlementToken
     name: 'Bicep Local - Manager Approval Required'
-    catalogName: 'Bicep Local - Approval Workflows Catalog'
+    catalogName: catalog.name
     accessPackageDescription: 'Requires direct manager approval'
     isHidden: false
   }
@@ -47,13 +43,11 @@ module managerApprovalPackage '../../avm/res/graph/identity-governance/entitleme
 }
 
 module managerApprovalPolicy '../../avm/res/graph/identity-governance/entitlement-management/assignment-policies/main.bicep' = {
-
-  name: 'managerApprovalPolicyDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Policy: Manager Must Approve'
-    accessPackageName: 'Bicep Local - Manager Approval Required'
-    catalogName: 'Bicep Local - Approval Workflows Catalog'
+    accessPackageName: managerApprovalPackage.name
+    catalogName: catalog.name
     policyDescription: 'Any user can request - direct manager approves'
     allowedTargetScope: 'AllMemberUsers'
     requestorSettings: {
@@ -92,12 +86,10 @@ module managerApprovalPolicy '../../avm/res/graph/identity-governance/entitlemen
 // ==========================================
 
 module userApproverPackage '../../avm/res/graph/identity-governance/entitlement-management/access-package/main.bicep' = {
-
-  name: 'userApproverPackageDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Bicep Local - Specific User Must Approve'
-    catalogName: 'Bicep Local - Approval Workflows Catalog'
+    catalogName: catalog.name
     accessPackageDescription: 'All users can request - specific user approves'
     isHidden: false
   }
@@ -107,13 +99,11 @@ module userApproverPackage '../../avm/res/graph/identity-governance/entitlement-
 }
 
 module userApproverPolicy '../../avm/res/graph/identity-governance/entitlement-management/assignment-policies/main.bicep' = {
-
-  name: 'userApproverPolicyDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Policy: Specific User Approves All'
-    accessPackageName: 'Bicep Local - Specific User Must Approve'
-    catalogName: 'Bicep Local - Approval Workflows Catalog'
+    accessPackageName: userApproverPackage.name
+    catalogName: catalog.name
     policyDescription: 'Any user can request - specific user approves'
     allowedTargetScope: 'AllMemberUsers'
     requestorSettings: {
@@ -143,9 +133,6 @@ module userApproverPolicy '../../avm/res/graph/identity-governance/entitlement-m
     durationInDays: 60
     canExtend: false
   }
-  dependsOn: [
-    userApproverPackage
-  ]
 }
 
 // ==========================================
@@ -153,28 +140,21 @@ module userApproverPolicy '../../avm/res/graph/identity-governance/entitlement-m
 // ==========================================
 
 module groupAccessPackage '../../avm/res/graph/identity-governance/entitlement-management/access-package/main.bicep' = {
-
-  name: 'groupAccessPackageDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Bicep Local - Group Peer Approval'
-    catalogName: 'Bicep Local - Approval Workflows Catalog'
+    catalogName: catalog.name
     accessPackageDescription: 'Group members can request - other group members approve'
     isHidden: false
   }
-  dependsOn: [
-    catalog
-  ]
 }
 
 module groupAccessPolicy '../../avm/res/graph/identity-governance/entitlement-management/assignment-policies/main.bicep' = {
-
-  name: 'groupAccessPolicyDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Policy: Group Members Approve Peers'
-    accessPackageName: 'Bicep Local - Group Peer Approval'
-    catalogName: 'Bicep Local - Approval Workflows Catalog'
+    accessPackageName: groupAccessPackage.name
+    catalogName: catalog.name
     policyDescription: 'Group members request - peers approve + quarterly reviews'
     allowedTargetScope: 'SpecificDirectoryUsers'
     requestorSettings: {
@@ -235,12 +215,10 @@ module groupAccessPolicy '../../avm/res/graph/identity-governance/entitlement-ma
 // ==========================================
 
 module twoStagePackage '../../avm/res/graph/identity-governance/entitlement-management/access-package/main.bicep' = {
-
-  name: 'twoStagePackageDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Bicep Local - Two-Stage Approval'
-    catalogName: 'Bicep Local - Approval Workflows Catalog'
+    catalogName: catalog.name
     accessPackageDescription: 'User approves first, then group members approve'
     isHidden: false
   }
@@ -250,13 +228,11 @@ module twoStagePackage '../../avm/res/graph/identity-governance/entitlement-mana
 }
 
 module twoStagePolicy '../../avm/res/graph/identity-governance/entitlement-management/assignment-policies/main.bicep' = {
-
-  name: 'twostagePolicyDeployment'
   params: {
     entitlementToken: entitlementToken
     name: 'Policy: Two-Stage (User → Group)'
-    accessPackageName: 'Bicep Local - Two-Stage Approval'
-    catalogName: 'Bicep Local - Approval Workflows Catalog'
+    accessPackageName: twoStagePackage.name
+    catalogName: catalog.name
     policyDescription: 'Stage 1: User approves, Stage 2: Group approves'
     allowedTargetScope: 'AllMemberUsers'
     requestorSettings: {
@@ -298,9 +274,6 @@ module twoStagePolicy '../../avm/res/graph/identity-governance/entitlement-manag
     durationInDays: 60
     canExtend: false
   }
-  dependsOn: [
-    twoStagePackage
-  ]
 }
 
 // ==========================================
