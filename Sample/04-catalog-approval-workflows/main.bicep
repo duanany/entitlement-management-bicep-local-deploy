@@ -1,9 +1,5 @@
 targetScope = 'local'
 
-extension entitlementmgmt with {
-  entitlementToken: entitlementToken
-}
-
 @secure()
 @description('Entitlement Management API token (Graph API token with EntitlementManagement.ReadWrite.All permission)')
 param entitlementToken string
@@ -18,249 +14,309 @@ param testGroupId string = '0afd1da6-51fb-450f-bf1a-069a85dcacad'
 // CATALOG
 // ==========================================
 
-resource catalog 'accessPackageCatalog' = {
-  displayName: 'Bicep Local - Approval Workflows Catalog'
-  description: 'Demonstrates different approval patterns: manager, user, group, multi-stage'
-  isExternallyVisible: false
-  catalogType: 'userManaged'
-  state: 'published'
+module catalog '../../avm/res/graph/identity-governance/entitlement-management/catalogs/main.bicep' = {
+
+  name: 'catalogDeployment'
+  params: {
+    entitlementToken: entitlementToken
+    name: 'Bicep Local - Approval Workflows Catalog'
+    catalogDescription: 'Demonstrates different approval patterns: manager, user, group, multi-stage'
+    isExternallyVisible: false
+    catalogType: 'UserManaged'
+    state: 'Published'
+  }
 }
 
 // ==========================================
 // PACKAGE 1: Manager Approval
 // ==========================================
 
-resource managerApprovalPackage 'accessPackage' = {
-  displayName: 'Bicep Local - Manager Approval Required'
-  description: 'Requires direct manager approval'
-  catalogId: catalog.id
-  isHidden: false
+module managerApprovalPackage '../../avm/res/graph/identity-governance/entitlement-management/access-package/main.bicep' = {
+
+  name: 'managerApprovalPackageDeployment'
+  params: {
+    entitlementToken: entitlementToken
+    name: 'Bicep Local - Manager Approval Required'
+    catalogName: 'Bicep Local - Approval Workflows Catalog'
+    accessPackageDescription: 'Requires direct manager approval'
+    isHidden: false
+  }
+  dependsOn: [
+    catalog
+  ]
 }
 
-resource managerApprovalPolicy 'accessPackageAssignmentPolicy' = {
-  displayName: 'Policy: Manager Must Approve'
-  description: 'Any user can request - direct manager approves'
-  accessPackageId: managerApprovalPackage.id
-  allowedTargetScope: 'AllMemberUsers'
+module managerApprovalPolicy '../../avm/res/graph/identity-governance/entitlement-management/assignment-policies/main.bicep' = {
 
-  requestorSettings: {
-    scopeType: 'AllExistingDirectoryMemberUsers'
-    acceptRequests: true
+  name: 'managerApprovalPolicyDeployment'
+  params: {
+    entitlementToken: entitlementToken
+    name: 'Policy: Manager Must Approve'
+    accessPackageName: 'Bicep Local - Manager Approval Required'
+    catalogName: 'Bicep Local - Approval Workflows Catalog'
+    policyDescription: 'Any user can request - direct manager approves'
+    allowedTargetScope: 'AllMemberUsers'
+    requestorSettings: {
+      scopeType: 'AllExistingDirectoryMemberUsers'
+      acceptRequests: true
+    }
+    requestApprovalSettings: {
+      isApprovalRequired: true
+      isApprovalRequiredForExtension: false
+      isRequestorJustificationRequired: true
+      approvalMode: 'SingleStage'
+      approvalStages: [
+        {
+          approvalStageTimeOutInDays: 14
+          isApproverJustificationRequired: true
+          isEscalationEnabled: false
+          primaryApprovers: [
+            {
+              oDataType: '#microsoft.graph.requestorManager'
+              managerLevel: 1 // Direct manager
+            }
+          ]
+        }
+      ]
+    }
+    durationInDays: 90
+    canExtend: true
   }
-
-  requestApprovalSettings: {
-    isApprovalRequired: true
-    isApprovalRequiredForExtension: false
-    isRequestorJustificationRequired: true
-    approvalMode: 'SingleStage'
-    approvalStages: [
-      {
-        approvalStageTimeOutInDays: 14
-        isApproverJustificationRequired: true
-        isEscalationEnabled: false
-        primaryApprovers: [
-          {
-            oDataType: '#microsoft.graph.requestorManager'
-            managerLevel: 1 // Direct manager
-          }
-        ]
-      }
-    ]
-  }
-
-  durationInDays: 90
-  canExtend: true
+  dependsOn: [
+    managerApprovalPackage
+  ]
 }
 
 // ==========================================
 // PACKAGE 2: Specific User Approver
 // ==========================================
 
-resource userApproverPackage 'accessPackage' = {
-  displayName: 'Bicep Local - Specific User Must Approve'
-  description: 'All users can request - specific user approves'
-  catalogId: catalog.id
-  isHidden: false
+module userApproverPackage '../../avm/res/graph/identity-governance/entitlement-management/access-package/main.bicep' = {
+
+  name: 'userApproverPackageDeployment'
+  params: {
+    entitlementToken: entitlementToken
+    name: 'Bicep Local - Specific User Must Approve'
+    catalogName: 'Bicep Local - Approval Workflows Catalog'
+    accessPackageDescription: 'All users can request - specific user approves'
+    isHidden: false
+  }
+  dependsOn: [
+    catalog
+  ]
 }
 
-resource userApproverPolicy 'accessPackageAssignmentPolicy' = {
-  displayName: 'Policy: Specific User Approves All'
-  description: 'Any user can request - specific user approves'
-  accessPackageId: userApproverPackage.id
-  allowedTargetScope: 'AllMemberUsers'
+module userApproverPolicy '../../avm/res/graph/identity-governance/entitlement-management/assignment-policies/main.bicep' = {
 
-  requestorSettings: {
-    scopeType: 'AllExistingDirectoryMemberUsers'
-    acceptRequests: true
+  name: 'userApproverPolicyDeployment'
+  params: {
+    entitlementToken: entitlementToken
+    name: 'Policy: Specific User Approves All'
+    accessPackageName: 'Bicep Local - Specific User Must Approve'
+    catalogName: 'Bicep Local - Approval Workflows Catalog'
+    policyDescription: 'Any user can request - specific user approves'
+    allowedTargetScope: 'AllMemberUsers'
+    requestorSettings: {
+      scopeType: 'AllExistingDirectoryMemberUsers'
+      acceptRequests: true
+    }
+    requestApprovalSettings: {
+      isApprovalRequired: true
+      isApprovalRequiredForExtension: false
+      isRequestorJustificationRequired: true
+      approvalMode: 'SingleStage'
+      approvalStages: [
+        {
+          approvalStageTimeOutInDays: 7
+          isApproverJustificationRequired: false
+          isEscalationEnabled: false
+          primaryApprovers: [
+            {
+              oDataType: '#microsoft.graph.singleUser'
+              userId: testUserId
+              description: 'Specific user as approver'
+            }
+          ]
+        }
+      ]
+    }
+    durationInDays: 60
+    canExtend: false
   }
-
-  requestApprovalSettings: {
-    isApprovalRequired: true
-    isApprovalRequiredForExtension: false
-    isRequestorJustificationRequired: true
-    approvalMode: 'SingleStage'
-    approvalStages: [
-      {
-        approvalStageTimeOutInDays: 7
-        isApproverJustificationRequired: false
-        isEscalationEnabled: false
-        primaryApprovers: [
-          {
-            oDataType: '#microsoft.graph.singleUser'
-            userId: testUserId
-            description: 'Specific user as approver'
-          }
-        ]
-      }
-    ]
-  }
-
-  durationInDays: 60
-  canExtend: false
+  dependsOn: [
+    userApproverPackage
+  ]
 }
 
 // ==========================================
 // PACKAGE 3: Group-Based Approval
 // ==========================================
 
-resource groupAccessPackage 'accessPackage' = {
-  displayName: 'Bicep Local - Group Peer Approval'
-  description: 'Group members can request - other group members approve'
-  catalogId: catalog.id
-  isHidden: false
+module groupAccessPackage '../../avm/res/graph/identity-governance/entitlement-management/access-package/main.bicep' = {
+
+  name: 'groupAccessPackageDeployment'
+  params: {
+    entitlementToken: entitlementToken
+    name: 'Bicep Local - Group Peer Approval'
+    catalogName: 'Bicep Local - Approval Workflows Catalog'
+    accessPackageDescription: 'Group members can request - other group members approve'
+    isHidden: false
+  }
+  dependsOn: [
+    catalog
+  ]
 }
 
-resource groupAccessPolicy 'accessPackageAssignmentPolicy' = {
-  displayName: 'Policy: Group Members Approve Peers'
-  description: 'Group members request - peers approve + quarterly reviews'
-  accessPackageId: groupAccessPackage.id
-  allowedTargetScope: 'SpecificDirectoryUsers'
+module groupAccessPolicy '../../avm/res/graph/identity-governance/entitlement-management/assignment-policies/main.bicep' = {
 
-  requestorSettings: {
-    scopeType: 'SpecificDirectorySubjects'
-    acceptRequests: true
-    allowedRequestors: [
-      {
-        oDataType: '#microsoft.graph.groupMembers'
-        groupId: testGroupId
-        description: 'Group members can request'
-      }
-    ]
+  name: 'groupAccessPolicyDeployment'
+  params: {
+    entitlementToken: entitlementToken
+    name: 'Policy: Group Members Approve Peers'
+    accessPackageName: 'Bicep Local - Group Peer Approval'
+    catalogName: 'Bicep Local - Approval Workflows Catalog'
+    policyDescription: 'Group members request - peers approve + quarterly reviews'
+    allowedTargetScope: 'SpecificDirectoryUsers'
+    requestorSettings: {
+      scopeType: 'SpecificDirectorySubjects'
+      acceptRequests: true
+      allowedRequestors: [
+        {
+          oDataType: '#microsoft.graph.groupMembers'
+          groupId: testGroupId
+          description: 'Group members can request'
+        }
+      ]
+    }
+    requestApprovalSettings: {
+      isApprovalRequired: true
+      isApprovalRequiredForExtension: true
+      isRequestorJustificationRequired: true
+      approvalMode: 'SingleStage'
+      approvalStages: [
+        {
+          approvalStageTimeOutInDays: 14
+          isApproverJustificationRequired: true
+          isEscalationEnabled: false
+          primaryApprovers: [
+            {
+              oDataType: '#microsoft.graph.groupMembers'
+              groupId: testGroupId
+              description: 'Group members as approvers'
+            }
+          ]
+        }
+      ]
+    }
+    reviewSettings: {
+      isEnabled: true
+      recurrenceType: 'quarterly'
+      reviewerType: 'Reviewers'
+      startDateTime: '2025-12-01T00:00:00Z'
+      durationInDays: 14
+      reviewers: [
+        {
+          oDataType: '#microsoft.graph.groupMembers'
+          groupId: testGroupId
+          description: 'Group members as reviewers'
+        }
+      ]
+    }
+    durationInDays: 90
+    canExtend: true
   }
-
-  requestApprovalSettings: {
-    isApprovalRequired: true
-    isApprovalRequiredForExtension: true
-    isRequestorJustificationRequired: true
-    approvalMode: 'SingleStage'
-    approvalStages: [
-      {
-        approvalStageTimeOutInDays: 14
-        isApproverJustificationRequired: true
-        isEscalationEnabled: false
-        primaryApprovers: [
-          {
-            oDataType: '#microsoft.graph.groupMembers'
-            groupId: testGroupId
-            description: 'Group members as approvers'
-          }
-        ]
-      }
-    ]
-  }
-
-  reviewSettings: {
-    isEnabled: true
-    recurrenceType: 'quarterly'
-    reviewerType: 'Reviewers'
-    startDateTime: '2025-12-01T00:00:00Z'
-    durationInDays: 14
-    reviewers: [
-      {
-        oDataType: '#microsoft.graph.groupMembers'
-        groupId: testGroupId
-        description: 'Group members as reviewers'
-      }
-    ]
-  }
-
-  durationInDays: 90
-  canExtend: true
+  dependsOn: [
+    groupAccessPackage
+  ]
 }
 
 // ==========================================
 // PACKAGE 4: Two-Stage Approval
 // ==========================================
 
-resource twoStagePackage 'accessPackage' = {
-  displayName: 'Bicep Local - Two-Stage Approval'
-  description: 'User approves first, then group members approve'
-  catalogId: catalog.id
-  isHidden: false
+module twoStagePackage '../../avm/res/graph/identity-governance/entitlement-management/access-package/main.bicep' = {
+
+  name: 'twoStagePackageDeployment'
+  params: {
+    entitlementToken: entitlementToken
+    name: 'Bicep Local - Two-Stage Approval'
+    catalogName: 'Bicep Local - Approval Workflows Catalog'
+    accessPackageDescription: 'User approves first, then group members approve'
+    isHidden: false
+  }
+  dependsOn: [
+    catalog
+  ]
 }
 
-resource twoStagePolicy 'accessPackageAssignmentPolicy' = {
-  displayName: 'Policy: Two-Stage (User → Group)'
-  description: 'Stage 1: User approves, Stage 2: Group approves'
-  accessPackageId: twoStagePackage.id
-  allowedTargetScope: 'AllMemberUsers'
+module twoStagePolicy '../../avm/res/graph/identity-governance/entitlement-management/assignment-policies/main.bicep' = {
 
-  requestorSettings: {
-    scopeType: 'AllExistingDirectoryMemberUsers'
-    acceptRequests: true
+  name: 'twostagePolicyDeployment'
+  params: {
+    entitlementToken: entitlementToken
+    name: 'Policy: Two-Stage (User → Group)'
+    accessPackageName: 'Bicep Local - Two-Stage Approval'
+    catalogName: 'Bicep Local - Approval Workflows Catalog'
+    policyDescription: 'Stage 1: User approves, Stage 2: Group approves'
+    allowedTargetScope: 'AllMemberUsers'
+    requestorSettings: {
+      scopeType: 'AllExistingDirectoryMemberUsers'
+      acceptRequests: true
+    }
+    requestApprovalSettings: {
+      isApprovalRequired: true
+      isApprovalRequiredForExtension: false
+      isRequestorJustificationRequired: true
+      approvalMode: 'Serial' // Sequential approval stages
+      approvalStages: [
+        {
+          approvalStageTimeOutInDays: 5
+          isApproverJustificationRequired: false
+          isEscalationEnabled: false
+          primaryApprovers: [
+            {
+              oDataType: '#microsoft.graph.singleUser'
+              userId: testUserId
+              description: 'Stage 1: User approval'
+            }
+          ]
+        }
+        {
+          approvalStageTimeOutInDays: 7
+          isApproverJustificationRequired: true
+          isEscalationEnabled: false
+          primaryApprovers: [
+            {
+              oDataType: '#microsoft.graph.groupMembers'
+              groupId: testGroupId
+              description: 'Stage 2: Group approval'
+            }
+          ]
+        }
+      ]
+    }
+    durationInDays: 60
+    canExtend: false
   }
-
-  requestApprovalSettings: {
-    isApprovalRequired: true
-    isApprovalRequiredForExtension: false
-    isRequestorJustificationRequired: true
-    approvalMode: 'Serial' // Sequential approval stages
-    approvalStages: [
-      {
-        approvalStageTimeOutInDays: 5
-        isApproverJustificationRequired: false
-        isEscalationEnabled: false
-        primaryApprovers: [
-          {
-            oDataType: '#microsoft.graph.singleUser'
-            userId: testUserId
-            description: 'Stage 1: User approval'
-          }
-        ]
-      }
-      {
-        approvalStageTimeOutInDays: 7
-        isApproverJustificationRequired: true
-        isEscalationEnabled: false
-        primaryApprovers: [
-          {
-            oDataType: '#microsoft.graph.groupMembers'
-            groupId: testGroupId
-            description: 'Stage 2: Group approval'
-          }
-        ]
-      }
-    ]
-  }
-
-  durationInDays: 60
-  canExtend: false
+  dependsOn: [
+    twoStagePackage
+  ]
 }
 
 // ==========================================
 // OUTPUTS
 // ==========================================
 
-output catalogId string = catalog.id
+output catalogId string = catalog.outputs.resourceId
 
 // Package IDs
-output managerApprovalPackageId string = managerApprovalPackage.id
-output userApproverPackageId string = userApproverPackage.id
-output groupAccessPackageId string = groupAccessPackage.id
-output twoStagePackageId string = twoStagePackage.id
+output managerApprovalPackageId string = managerApprovalPackage.outputs.resourceId
+output userApproverPackageId string = userApproverPackage.outputs.resourceId
+output groupAccessPackageId string = groupAccessPackage.outputs.resourceId
+output twoStagePackageId string = twoStagePackage.outputs.resourceId
 
 // Policy IDs
-output managerApprovalPolicyId string = managerApprovalPolicy.id
-output userApproverPolicyId string = userApproverPolicy.id
-output groupAccessPolicyId string = groupAccessPolicy.id
-output twostagePolicyId string = twoStagePolicy.id
+output managerApprovalPolicyId string = managerApprovalPolicy.outputs.resourceId
+output userApproverPolicyId string = userApproverPolicy.outputs.resourceId
+output groupAccessPolicyId string = groupAccessPolicy.outputs.resourceId
+output twostagePolicyId string = twoStagePolicy.outputs.resourceId

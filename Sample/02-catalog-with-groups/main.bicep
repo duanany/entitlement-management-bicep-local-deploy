@@ -31,77 +31,92 @@ resource demoSecurityGroup 'securityGroup' = {
 }
 
 // ==========================================
-// CATALOG
+// CATALOG WITH RESOURCES
 // ==========================================
 
-resource catalog 'accessPackageCatalog' = {
-  displayName: 'Bicep Local - Security Group Catalog'
-  description: 'Catalog for managing security group membership via access packages'
-  isExternallyVisible: false
-  catalogType: 'userManaged'
-  state: 'published'
-}
+module catalog '../../avm/res/graph/identity-governance/entitlement-management/catalogs/main.bicep' = {
 
-// ==========================================
-// CATALOG RESOURCE: Add Group to Catalog
-// ==========================================
-
-resource catalogResourceSecurityGroup 'accessPackageCatalogResource' = {
-  catalogId: catalog.id
-  originId: demoSecurityGroup.id
-  originSystem: 'AadGroup'
-  displayName: demoSecurityGroup.displayName
-  description: 'Security group "${demoSecurityGroup.displayName}" added to catalog "${catalog.displayName}"'
+  name: 'catalogDeployment'
+  params: {
+    entitlementToken: entitlementToken
+    name: 'Bicep Local - Security Group Catalog'
+    catalogDescription: 'Catalog for managing security group membership via access packages'
+    isExternallyVisible: false
+    catalogType: 'UserManaged'
+    state: 'Published'
+    resources: [
+      {
+        originId: demoSecurityGroup.id
+        originSystem: 'AadGroup'
+        displayName: demoSecurityGroup.displayName
+        description: 'Security group "${demoSecurityGroup.displayName}" added to catalog'
+      }
+    ]
+  }
 }
 
 // ==========================================
 // ACCESS PACKAGE: Security Group Membership
 // ==========================================
 
-resource securityGroupAccessPackage 'accessPackage' = {
-  displayName: 'Bicep Local - Security Group Membership'
-  description: 'Grants membership to "${demoSecurityGroup.displayName}" security group'
-  catalogId: catalogResourceSecurityGroup.catalogId
-  isHidden: false
+module securityGroupAccessPackage '../../avm/res/graph/identity-governance/entitlement-management/access-package/main.bicep' = {
+
+  name: 'accessPackageDeployment'
+  params: {
+    entitlementToken: entitlementToken
+    name: 'Bicep Local - Security Group Membership'
+    catalogName: 'Bicep Local - Security Group Catalog'
+    accessPackageDescription: 'Grants membership to "${demoSecurityGroup.displayName}" security group'
+    isHidden: false
+    resourceRoleScopes: [
+      {
+        resourceOriginId: demoSecurityGroup.id
+        roleOriginId: 'Member_${demoSecurityGroup.id}'
+        resourceOriginSystem: 'AadGroup'
+        roleDisplayName: 'Member'
+      }
+    ]
+  }
+  dependsOn: [
+    catalog
+  ]
 }
 
-resource securityGroupResourceRole 'accessPackageResourceRoleScope' = {
-  accessPackageId: securityGroupAccessPackage.id
-  resourceOriginId: demoSecurityGroup.id
-  roleOriginId: 'Member_${demoSecurityGroup.id}'
-  resourceOriginSystem: 'AadGroup'
-  roleDisplayName: 'Member'
-}
+module securityGroupAccessPolicy '../../avm/res/graph/identity-governance/entitlement-management/assignment-policies/main.bicep' = {
 
-resource securityGroupAccessPolicy 'accessPackageAssignmentPolicy' = {
-  displayName: 'Policy: All Users Can Request Group Membership'
-  description: 'Any member user can request membership to "${demoSecurityGroup.displayName}"'
-  accessPackageId: securityGroupAccessPackage.id
-  allowedTargetScope: 'AllMemberUsers'
-
-  requestorSettings: {
-    scopeType: 'AllExistingDirectoryMemberUsers'
-    acceptRequests: true
+  name: 'assignmentPolicyDeployment'
+  params: {
+    entitlementToken: entitlementToken
+    name: 'Policy: All Users Can Request Group Membership'
+    accessPackageName: 'Bicep Local - Security Group Membership'
+    catalogName: 'Bicep Local - Security Group Catalog'
+    policyDescription: 'Any member user can request membership to "${demoSecurityGroup.displayName}"'
+    allowedTargetScope: 'AllMemberUsers'
+    requestorSettings: {
+      scopeType: 'AllExistingDirectoryMemberUsers'
+      acceptRequests: true
+    }
+    requestApprovalSettings: {
+      isApprovalRequired: false
+      isApprovalRequiredForExtension: false
+      isRequestorJustificationRequired: true
+      approvalMode: 'NoApproval'
+    }
+    durationInDays: 180
+    canExtend: true
   }
-
-  requestApprovalSettings: {
-    isApprovalRequired: false
-    isApprovalRequiredForExtension: false
-    isRequestorJustificationRequired: true
-    approvalMode: 'NoApproval'
-  }
-
-  durationInDays: 180
-  canExtend: true
+  dependsOn: [
+    securityGroupAccessPackage
+  ]
 }
 
 // ==========================================
 // OUTPUTS
 // ==========================================
 
-output catalogId string = catalog.id
+output catalogId string = catalog.outputs.resourceId
 output securityGroupId string = demoSecurityGroup.id
-output catalogResourceId string = catalogResourceSecurityGroup.id
-output accessPackageId string = securityGroupAccessPackage.id
-output resourceRoleId string = securityGroupResourceRole.id
-output policyId string = securityGroupAccessPolicy.id
+output catalogResourceId string = catalog.outputs.resources[0].resourceId
+output accessPackageId string = securityGroupAccessPackage.outputs.resourceId
+output resourceRoleId string = securityGroupAccessPackage.outputs.resourceRoleScopes[0].resourceId
+output policyId string = securityGroupAccessPolicy.outputs.resourceId

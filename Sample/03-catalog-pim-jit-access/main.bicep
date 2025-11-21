@@ -82,33 +82,26 @@ resource pimActivatedGroup 'securityGroup' = {
 // PIM CATALOG
 // ==========================================
 
-resource pimCatalog 'accessPackageCatalog' = {
-  displayName: 'Bicep Local - PIM JIT Access Catalog'
-  description: 'Dedicated catalog for PIM eligibility assignments - manages JIT activation'
-  isExternallyVisible: false
-  catalogType: 'userManaged'
-  state: 'published'
+module pimCatalog '../../avm/res/graph/identity-governance/entitlement-management/catalogs/main.bicep' = {
+
+  name: 'catalogDeployment'
+  params: {
+    entitlementToken: entitlementToken
+    name: 'Bicep Local - PIM JIT Access Catalog'
+    catalogDescription: 'Dedicated catalog for PIM eligibility assignments - manages JIT activation'
+    isExternallyVisible: false
+    catalogType: 'UserManaged'
+    state: 'Published'
+    resources: [
+      {
+        originId: pimEligibleGroup.id
+        originSystem: 'AadGroup'
+        displayName: pimEligibleGroup.displayName
+        description: 'PIM eligible group added to catalog - granted by access package assignment'
+      }
+    ]
+  }
 }
-
-// ==========================================
-// CATALOG RESOURCE: Add Eligible Group to Catalog
-// ==========================================
-// The ELIGIBLE group (not activated) is added to the catalog because:
-// - Access package assigns membership to the ELIGIBLE group
-// - ACTIVATED group has RBAC on Azure resources (managed outside this template)
-// - Flow: Request access → Get eligible membership → Activate PIM → Get activated membership → Access Azure resources
-
-resource catalogResourcePimEligible 'accessPackageCatalogResource' = {
-  catalogId: pimCatalog.id
-  originId: pimEligibleGroup.id
-  originSystem: 'AadGroup'
-  displayName: pimEligibleGroup.displayName
-  description: 'PIM eligible group added to catalog - granted by access package assignment'
-}
-
-// ==========================================
-// ACCESS PACKAGE: PIM JIT Activation
-// ==========================================
 
 // ==========================================
 // ACCESS PACKAGE: PIM JIT Activation
@@ -116,25 +109,27 @@ resource catalogResourcePimEligible 'accessPackageCatalogResource' = {
 // This access package grants membership to the ELIGIBLE group
 // Once users have eligible membership, they can activate PIM to join the ACTIVATED group
 
-resource pimAccessPackage 'accessPackage' = {
-  displayName: 'Bicep Local - PIM JIT Developer Activation'
-  description: 'Grants eligible group membership - enables PIM activation for Azure resource access'
-  catalogId: catalogResourcePimEligible.catalogId
-  isHidden: false
-}
+module pimAccessPackage '../../avm/res/graph/identity-governance/entitlement-management/access-package/main.bicep' = {
 
-// ==========================================
-// RESOURCE ROLE SCOPE: Assign Eligible Group Member Role
-// ==========================================
-// Access package assigns "Member" role of the ELIGIBLE group
-// Flow: Access package grants → Eligible group membership → User can activate PIM → Activated group membership → Azure RBAC
-
-resource pimResourceRole 'accessPackageResourceRoleScope' = {
-  accessPackageId: pimAccessPackage.id
-  resourceOriginId: pimEligibleGroup.id
-  roleOriginId: 'Member_${pimEligibleGroup.id}'
-  resourceOriginSystem: 'AadGroup'
-  roleDisplayName: 'Member'
+  name: 'accessPackageDeployment'
+  params: {
+    entitlementToken: entitlementToken
+    name: 'Bicep Local - PIM JIT Developer Activation'
+    catalogName: 'Bicep Local - PIM JIT Access Catalog'
+    accessPackageDescription: 'Grants eligible group membership - enables PIM activation for Azure resource access'
+    isHidden: false
+    resourceRoleScopes: [
+      {
+        resourceOriginId: pimEligibleGroup.id
+        roleOriginId: 'Member_${pimEligibleGroup.id}'
+        resourceOriginSystem: 'AadGroup'
+        roleDisplayName: 'Member'
+      }
+    ]
+  }
+  dependsOn: [
+    pimCatalog
+  ]
 }
 
 // ==========================================
@@ -142,47 +137,53 @@ resource pimResourceRole 'accessPackageResourceRoleScope' = {
 // ==========================================
 // Requestors request access → Approvers approve → User gets eligible group membership
 
-resource pimAccessPolicy 'accessPackageAssignmentPolicy' = {
-  displayName: 'Policy: Requestor Access with Approver Workflow'
-  description: 'Requestors request access, approvers approve, eligible membership granted'
-  accessPackageId: pimAccessPackage.id
-  allowedTargetScope: 'SpecificDirectoryUsers'
+module pimAccessPolicy '../../avm/res/graph/identity-governance/entitlement-management/assignment-policies/main.bicep' = {
 
-  requestorSettings: {
-    scopeType: 'SpecificDirectorySubjects'
-    acceptRequests: true
-    allowedRequestors: [
-      {
-        oDataType: '#microsoft.graph.groupMembers'
-        groupId: requestorGroup.id
-        description: 'PIM requestors - can request access to eligible group'
-      }
-    ]
+  name: 'assignmentPolicyDeployment'
+  params: {
+    entitlementToken: entitlementToken
+    name: 'Policy: Requestor Access with Approver Workflow'
+    accessPackageName: 'Bicep Local - PIM JIT Developer Activation'
+    catalogName: 'Bicep Local - PIM JIT Access Catalog'
+    policyDescription: 'Requestors request access, approvers approve, eligible membership granted'
+    allowedTargetScope: 'SpecificDirectoryUsers'
+    requestorSettings: {
+      scopeType: 'SpecificDirectorySubjects'
+      acceptRequests: true
+      allowedRequestors: [
+        {
+          oDataType: '#microsoft.graph.groupMembers'
+          groupId: requestorGroup.id
+          description: 'PIM requestors - can request access to eligible group'
+        }
+      ]
+    }
+    requestApprovalSettings: {
+      isApprovalRequired: true
+      isApprovalRequiredForExtension: false
+      isRequestorJustificationRequired: true
+      approvalMode: 'SingleStage'
+      approvalStages: [
+        {
+          approvalStageTimeOutInDays: 14
+          isApproverJustificationRequired: false
+          isEscalationEnabled: false
+          primaryApprovers: [
+            {
+              oDataType: '#microsoft.graph.groupMembers'
+              groupId: approverGroup.id
+              description: 'PIM approvers - approve access package requests'
+            }
+          ]
+        }
+      ]
+    }
+    durationInDays: 180
+    canExtend: true
   }
-
-  requestApprovalSettings: {
-    isApprovalRequired: true
-    isApprovalRequiredForExtension: false
-    isRequestorJustificationRequired: true
-    approvalMode: 'SingleStage'
-    approvalStages: [
-      {
-        approvalStageTimeOutInDays: 14
-        isApproverJustificationRequired: false
-        isEscalationEnabled: false
-        primaryApprovers: [
-          {
-            oDataType: '#microsoft.graph.groupMembers'
-            groupId: approverGroup.id
-            description: 'PIM approvers - approve access package requests'
-          }
-        ]
-      }
-    ]
-  }
-
-  durationInDays: 180 // 6 months eligible group membership
-  canExtend: true
+  dependsOn: [
+    pimAccessPackage
+  ]
 }
 
 // ==========================================
@@ -221,9 +222,9 @@ output pimEligibleGroupId string = pimEligibleGroup.id
 output pimActivatedGroupId string = pimActivatedGroup.id
 
 // Catalog and Access Package
-output pimCatalogId string = pimCatalog.id
-output catalogResourceId string = catalogResourcePimEligible.id
-output pimAccessPackageId string = pimAccessPackage.id
-output pimResourceRoleId string = pimResourceRole.id
-output pimAccessPolicyId string = pimAccessPolicy.id
+output pimCatalogId string = pimCatalog.outputs.resourceId
+output catalogResourceId string = pimCatalog.outputs.resources[0].resourceId
+output pimAccessPackageId string = pimAccessPackage.outputs.resourceId
+output pimResourceRoleId string = pimAccessPackage.outputs.resourceRoleScopes[0].resourceId
+output pimAccessPolicyId string = pimAccessPolicy.outputs.resourceId
 output pimEligibilityId string = pimEligibility.pimEligibilityRequestId
