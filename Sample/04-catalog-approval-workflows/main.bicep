@@ -37,9 +37,6 @@ module managerApprovalPackage '../../avm/res/graph/identity-governance/entitleme
     accessPackageDescription: 'Requires direct manager approval'
     isHidden: false
   }
-  dependsOn: [
-    catalog
-  ]
 }
 
 module managerApprovalPolicy '../../avm/res/graph/identity-governance/entitlement-management/assignment-policies/main.bicep' = {
@@ -93,9 +90,6 @@ module userApproverPackage '../../avm/res/graph/identity-governance/entitlement-
     accessPackageDescription: 'All users can request - specific user approves'
     isHidden: false
   }
-  dependsOn: [
-    catalog
-  ]
 }
 
 module userApproverPolicy '../../avm/res/graph/identity-governance/entitlement-management/assignment-policies/main.bicep' = {
@@ -205,9 +199,6 @@ module groupAccessPolicy '../../avm/res/graph/identity-governance/entitlement-ma
     durationInDays: 90
     canExtend: true
   }
-  dependsOn: [
-    groupAccessPackage
-  ]
 }
 
 // ==========================================
