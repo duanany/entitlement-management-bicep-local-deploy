@@ -73,9 +73,6 @@ module managerApprovalPolicy '../../avm/res/graph/identity-governance/entitlemen
     durationInDays: 90
     canExtend: true
   }
-  dependsOn: [
-    managerApprovalPackage
-  ]
 }
 
 // ==========================================
@@ -213,9 +210,6 @@ module twoStagePackage '../../avm/res/graph/identity-governance/entitlement-mana
     accessPackageDescription: 'User approves first, then group members approve'
     isHidden: false
   }
-  dependsOn: [
-    catalog
-  ]
 }
 
 module twoStagePolicy '../../avm/res/graph/identity-governance/entitlement-management/assignment-policies/main.bicep' = {

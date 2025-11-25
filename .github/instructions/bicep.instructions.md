@@ -12,6 +12,36 @@ description: "Bicep local-deploy usage patterns for Entitlement Management exten
 - Use `@secure()` decorator for all token parameters.
 - Use `readEnvironmentVariable()` in `.bicepparam` files for tokens - NEVER hardcode credentials.
 
+## Token Acquisition Workflow (CRITICAL - Run Before Every Deployment)
+
+**ALWAYS acquire a fresh token before running `bicep local-deploy`:**
+
+```bash
+# Step 1: Navigate to repo root and get fresh Graph API token
+cd "$(git rev-parse --show-toplevel)"
+python3 scripts/get_access_token.py
+
+# Step 2: Token is auto-copied to clipboard - export to environment variables
+export GRAPH_TOKEN=$(pbpaste)
+export ENTITLEMENT_TOKEN=$GRAPH_TOKEN
+export GROUP_USER_TOKEN=$GRAPH_TOKEN
+
+# Step 3: Verify token is set (should show "eyJ...")
+echo "Token set: ${ENTITLEMENT_TOKEN:0:50}..."
+
+# Step 4: NOW you can deploy (from any sample directory)
+cd sample/01-catalog-basic
+bicep local-deploy main.bicepparam
+```
+
+**Token validity**: ~60-90 minutes. If deployment fails with 401/403, re-run token acquisition.
+
+**Required scopes**:
+- `EntitlementManagement.ReadWrite.All`
+- `Group.ReadWrite.All` (for samples with groups/PIM)
+
+**IMPORTANT**: Always use relative paths from repo root. Never hardcode absolute paths or usernames.
+
 ## Token Management
 - **Two-token architecture** supports least privilege:
   - `entitlementToken`: For catalogs, packages, policies, assignments
@@ -54,7 +84,7 @@ resource policy 'accessPackageAssignmentPolicy' = {
   displayName: 'All Users - Manager Approval'
   accessPackageId: accessPackage.id  // Reference package ID
   allowedTargetScope: 'AllMemberUsers'
-  
+
   requestApprovalSettings: {
     isApprovalRequired: true
     approvalMode: 'SingleStage'
@@ -70,7 +100,7 @@ resource policy 'accessPackageAssignmentPolicy' = {
       }
     ]
   }
-  
+
   durationInDays: 90
   canExtend: true
 }
