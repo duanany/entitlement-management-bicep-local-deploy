@@ -4,14 +4,16 @@ Production-ready Bicep templates demonstrating Azure Entitlement Management patt
 
 ## 📁 Folder Structure
 
-```
+```text
 Sample/
 ├── 01-catalog-basic/               # Minimal deployment (catalog + access package)
 ├── 02-catalog-with-groups/         # Security group → catalog → access package workflow
 ├── 03-catalog-pim-jit-access/      # PIM Just-In-Time activation (UNIQUE VALUE! ⭐)
 ├── 04-catalog-approval-workflows/  # 4 approval patterns: manager, user, group, multi-stage
+├── 05-group-pim-eligibility-enhanced/ # Multi-scenario test for groupPimEligibilityEnhanced
 ├── entitlementmgmt-ext/        # Published extension binaries (auto-generated)
 ├── pim-policy-template.json    # PIM activation policy template
+├── pim-policy-contractor-strict.json # Strict Conditional Access + approval reference
 └── README.md                   # This file
 ```
 
@@ -44,6 +46,7 @@ python3 entitlement-management/Scripts/get_access_token.py
 | **02-catalog-with-groups** | Create group + add to access package | Both tokens | ~30s |
 | **03-catalog-pim-jit-access** ⭐ | PIM eligibility + JIT activation | Both tokens | ~60s |
 | **04-catalog-approval-workflows** | 4 approval patterns (manager, user, group, 2-stage) | Entitlement only | ~8s |
+| **05-group-pim-eligibility-enhanced** | Multi-scenario validation for `groupPimEligibilityEnhanced` (uniqueName, existing IDs, auth-context-only) | Both tokens | ~40s |
 
 ### 4. Deploy
 
@@ -65,6 +68,7 @@ bicep local-deploy main.bicepparam
 **Minimal deployment** - catalog + access package + policy.
 
 **What you'll learn**:
+
 - Create access package catalog
 - Define access package
 - Configure assignment policy
@@ -79,7 +83,7 @@ bicep local-deploy main.bicepparam
 
 ### 02-catalog-with-groups
 
-**Security Group → Catalog → Access Package**
+#### Security Group → Catalog → Access Package
 
 Demonstrates the full workflow:
 
@@ -99,6 +103,7 @@ Uses `securityGroup` resource (⚠️ for testing only - use Microsoft Graph Bic
 **UNIQUE VALUE!** Microsoft Graph Bicep does **NOT** have `groupPimEligibility` resource.
 
 **What you'll learn**:
+
 - Privileged Identity Management (PIM) for groups
 - Just-In-Time (JIT) access activation
 - Time-limited group membership (2-hour max)
@@ -117,6 +122,7 @@ Uses `securityGroup` resource (⚠️ for testing only - use Microsoft Graph Bic
 **4 approval patterns** - manager, specific user, group peer, two-stage.
 
 **What you'll learn**:
+
 - `requestorManager` approver type (manager approval)
 - `singleUser` approver type (designated approver)
 - `groupMembers` approver type (peer approval + reviews)
@@ -127,6 +133,24 @@ Uses `securityGroup` resource (⚠️ for testing only - use Microsoft Graph Bic
 **Deploy time**: ~8 seconds
 
 [View README](./04-catalog-approval-workflows/README.md)
+
+---
+
+### 05-group-pim-eligibility-enhanced
+
+**Multi-scenario validation** for the enhanced handler (uniqueName, existing IDs, auth-context-only).
+
+**What you'll learn**:
+
+- Create eligible + activated security groups dedicated to PIM (Scenario 1 & 3)
+- Submit privilegedAccessGroup eligibility schedule requests without catalogs/access packages
+- Reuse existing group IDs without relying on `uniqueName` lookups (Scenario 2)
+- Configure activation/approval/notification/admin policy rules through a single resource
+
+**Resources created**: 4–7 depending on toggles
+**Deploy time**: ~40 seconds (schedule processing dominates)
+
+[View README](./05-group-pim-eligibility-enhanced/README.md)
 
 ## 🔧 Prerequisites
 
@@ -155,13 +179,13 @@ Your service principal or user account needs:
 | Token | Permissions | Used For |
 |-------|------------|----------|
 | `ENTITLEMENT_TOKEN` | `EntitlementManagement.ReadWrite.All` | Catalogs, packages, policies, assignments |
-| `GROUP_USER_TOKEN` | `Group.ReadWrite.All`<br/>`User.Read.All` | Security groups, PIM eligibility |
+| `GROUP_USER_TOKEN` | `Group.ReadWrite.All` + `User.Read.All` | Security groups, PIM eligibility |
 
 ## 🎯 Learning Path
 
 **Beginner** → **Intermediate** → **Advanced**
 
-```
+```text
 01-catalog-basic
 ↓
 02-catalog-with-groups
@@ -169,7 +193,11 @@ Your service principal or user account needs:
 04-catalog-approval-workflows
 ↓
 03-catalog-pim-jit-access ⭐
-```## 📚 Additional Resources
+↓
+05-group-pim-eligibility-enhanced (covers uniqueName + existing ID scenarios)
+```
+
+## 📚 Additional Resources
 
 - **Full Documentation**: See `../docs/` for detailed resource reference
 - **Handler Source Code**: See `../src/` for implementation details
@@ -180,6 +208,7 @@ Your service principal or user account needs:
 **Important**: Delete operations are not yet implemented in this extension.
 
 To remove deployed resources:
+
 1. **Azure Portal** → **Entra ID** → **Identity Governance** → **Entitlement Management**
 2. Navigate to **Catalogs**
 3. Delete the catalog (removes all access packages and policies)

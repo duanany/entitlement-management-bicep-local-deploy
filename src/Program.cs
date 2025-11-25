@@ -10,6 +10,7 @@ using EntitlementManagement.AccessPackageAssignmentPolicy;
 using EntitlementManagement.AccessPackageAssignment;
 using EntitlementManagement.SecurityGroup;
 using EntitlementManagement.GroupPimEligibility;
+using EntitlementManagement.GroupPimEligibilityEnhanced;
 
 var builder = WebApplication.CreateBuilder();
 
@@ -23,6 +24,7 @@ builder.Services
         configurationType: typeof(Configuration))
     .WithResourceHandler<SecurityGroupHandler>()
     .WithResourceHandler<GroupPimEligibilityHandler>()
+    .WithResourceHandler<GroupPimEligibilityEnhancedHandler>()
     .WithResourceHandler<AccessPackageCatalogHandler>()
     .WithResourceHandler<AccessPackageHandler>()
     .WithResourceHandler<AccessPackageCatalogResourceHandler>()

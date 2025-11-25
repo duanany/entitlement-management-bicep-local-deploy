@@ -19,7 +19,7 @@ description: "Bicep local-deploy usage patterns for Entitlement Management exten
 ```bash
 # Step 1: Navigate to repo root and get fresh Graph API token
 cd "$(git rev-parse --show-toplevel)"
-python3 scripts/get_access_token.py
+python3 Scripts/get_access_token.py
 
 # Step 2: Token is auto-copied to clipboard - export to environment variables
 export GRAPH_TOKEN=$(pbpaste)
@@ -33,6 +33,8 @@ echo "Token set: ${ENTITLEMENT_TOKEN:0:50}..."
 cd sample/01-catalog-basic
 bicep local-deploy main.bicepparam
 ```
+
+> **Note**: `Scripts/get_access_token.py` launches an interactive browser window via MSAL. This step must be executed by a signed-in user on a device that can open the Entra ID login page; it cannot be automated by headless agents.
 
 **Token validity**: ~60-90 minutes. If deployment fails with 401/403, re-run token acquisition.
 
