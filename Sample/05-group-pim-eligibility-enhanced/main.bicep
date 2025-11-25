@@ -249,8 +249,8 @@ resource pimEligibilityAuthContextOnly 'groupPimEligibilityEnhanced' = if (enabl
     maximumDuration: 'P180D'
   }
   activationPolicy: {
-    maxActivationDuration: 'PT1H'
-    requireJustification: false
+    maxActivationDuration: 'PT3H'
+    requireJustification: true
     requireMfa: false
     requireTicket: false
     requireConditionalAccessContext: true

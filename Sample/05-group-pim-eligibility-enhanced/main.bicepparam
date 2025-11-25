@@ -20,4 +20,4 @@ param existingRequireConditionalAccessContext = true
 
 // Scenario 3 (auth-context only)
 param enableAuthContextOnlyScenario = true
-param authContextOnlyId = 'c2'
+param authContextOnlyId = 'c1'
